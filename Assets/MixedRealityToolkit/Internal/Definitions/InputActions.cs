@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
-namespace MixedRealityToolkit.Internal.Definitons
+namespace MixedRealityToolkit.Internal.Definitions
 {
     /// <summary>
     /// InputActions defines the set of actions consumed internally within the MRTK.
@@ -9,6 +9,8 @@ namespace MixedRealityToolkit.Internal.Definitons
     /// </summary>
     public enum InputActions
     {
+        None = 0,
+        Raw,
         LeftTrigger,
         LeftTriggerPress,
         LeftTriggerHold,
@@ -25,9 +27,18 @@ namespace MixedRealityToolkit.Internal.Definitons
         LeftThumbstickPressed,
         RightThumbstick,
         RightThumbstickPressed,
-        ActionOne, // (Grab)
-        ActionTwo, // (Menu)
-        ActionThree, //(Start)
+        /// <summary>
+        /// Grab
+        /// </summary>
+        ActionOne,
+        /// <summary>
+        /// Menu
+        /// </summary>
+        ActionTwo,
+        /// <summary>
+        /// Start
+        /// </summary>
+        ActionThree,
         ActionFour,
         ActionFive,
         ActionSix,
@@ -37,6 +48,5 @@ namespace MixedRealityToolkit.Internal.Definitons
         ActionTen,
         ActionEleven,
         ActionTwelve,
-        Raw,
     }
 }

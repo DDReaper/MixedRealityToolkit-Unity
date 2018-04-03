@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
-namespace MixedRealityToolkit.Internal.Definitons
+namespace MixedRealityToolkit.Internal.Definitions
 {
     /// <summary>
     /// The ControllerInputType identifies the type of button or input being sent to the framework from a controller.
@@ -12,22 +12,30 @@ namespace MixedRealityToolkit.Internal.Definitons
         /// <summary>
         /// No Specified type.
         /// </summary>
-        None,
-        /// <summary>
-        /// Single Axis analogue input.
-        /// </summary>
-        Analogue1X,
-        /// <summary>
-        /// Dual Axis analogue input.
-        /// </summary>
-        Analogue2X,
+        None = 0,
         /// <summary>
         /// Digital On/Off input.
         /// </summary>
-        Digital,
+        Digital = 1,
+        /// <summary>
+        /// Single Axis analogue input.
+        /// </summary>
+        SingleAxis = 2,
+        /// <summary>
+        /// Dual Axis analogue input.
+        /// </summary>
+        DualAxis = 4,
+        /// <summary>
+        /// Either Position OR Rotation.
+        /// </summary>
+        ThreeDoF = 8,
+        /// <summary>
+        /// Position AND Rotation.
+        /// </summary>
+        SixDoF = 16,
         /// <summary>
         /// Raw stream from input (proxy only).
         /// </summary>
-        Raw,
+        Raw = 32,
     }
 }
