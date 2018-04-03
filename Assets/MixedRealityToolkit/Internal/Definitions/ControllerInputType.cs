@@ -26,11 +26,11 @@ namespace MixedRealityToolkit.Internal.Definitions
         /// </summary>
         DualAxis = 4,
         /// <summary>
-        /// Either Position || Rotation.
+        /// Either Position OR Rotation.
         /// </summary>
         ThreeDoF = 8,
         /// <summary>
-        /// Position && Rotation.
+        /// Position AND Rotation.
         /// </summary>
         SixDoF = 16,
         /// <summary>
