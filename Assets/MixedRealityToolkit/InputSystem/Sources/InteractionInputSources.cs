@@ -83,7 +83,7 @@ namespace Microsoft.MixedReality.Toolkit.InputSystem.Sources
             public readonly BaseControllerPointer[] PointerSceneObjects;
 
             public InteractionInputSource(InteractionSource source, string name, BaseControllerPointer[] pointerSceneObjects, IMixedRealityPointer[] pointers)
-                : base(name, new[] { InputType.None }, pointers)
+                : base(name, new[] { new InteractionDefinition(1, AxisType.None, InputType.None) }, pointers)
             {
                 Source = source;
                 PointerSceneObjects = pointerSceneObjects;
@@ -93,7 +93,7 @@ namespace Microsoft.MixedReality.Toolkit.InputSystem.Sources
                 }
             }
 #else
-            public InteractionInputSource(string name) : base(name, new[] { InputType.None }) { }
+            public InteractionInputSource(string name) : base(name, new[] { new InteractionDefinition(1, AxisType.None, InputType.None) }) { }
 #endif
 
             private static InputType GetSupportFlag<TReading>(SourceCapability<TReading> capability, InputType flagIfSupported)

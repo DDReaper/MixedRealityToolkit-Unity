@@ -96,13 +96,17 @@ namespace Microsoft.MixedReality.Toolkit.InputSystem.Sources
                 {
                     var inputSource = new BaseGenericInputSource(joystickNames[i], new[]
                     {
-                        InputType.ButtonPress,
-                        InputType.Trigger,
-                        InputType.TriggerPress,
-                        InputType.ThumbStick,
-                        InputType.ThumbStickPress,
-                        InputType.Menu,
-                        InputType.Select,
+                        // We would need a new definition for each button...
+                        new InteractionDefinition(1, AxisType.Digital, InputType.ButtonPress),
+                        // And a second one for second trigger
+                        new InteractionDefinition(2, AxisType.SingleAxis, InputType.Trigger),
+                        new InteractionDefinition(3, AxisType.Digital, InputType.TriggerPress),
+                        // and a second one for second thumbstick as well.
+                        new InteractionDefinition(4, AxisType.DualAxis, InputType.ThumbStick),
+                        new InteractionDefinition(5, AxisType.Digital, InputType.ThumbStickPress),
+                        // special buttons for menu and start.
+                        new InteractionDefinition(6, AxisType.Digital, InputType.Menu),
+                        new InteractionDefinition(7, AxisType.Digital, InputType.Start)
                     });
 
                     InputSources.Add(inputSource);
@@ -113,26 +117,26 @@ namespace Microsoft.MixedReality.Toolkit.InputSystem.Sources
                          joystickNames[i].Equals(OpenVRControllerLeft) ||
                          joystickNames[i].Equals(OpenVRControllerRight))
                 {
-                    var inputSource = new BaseGenericInputSource(
-                        joystickNames[i], new[]
-                        {
-                            InputType.Pointer,
-                            InputType.PointerPosition,
-                            InputType.PointerRotation,
-                            InputType.Grip,
-                            InputType.GripPress,
-                            InputType.GripPosition,
-                            InputType.GripRotation,
-                            InputType.ButtonPress,
-                            InputType.Trigger,
-                            InputType.TriggerPress,
-                            InputType.ThumbStick,
-                            InputType.ThumbStickPress,
-                            InputType.Menu,
-                            InputType.Select,
-                        });
-                    InputSources.Add(inputSource);
-                    inputSystem.RaiseSourceDetected(inputSource);
+                    //var inputSource = new BaseGenericInputSource(
+                    //    joystickNames[i], new[]
+                    //    {
+                    //        InputType.Pointer,
+                    //        InputType.PointerPosition,
+                    //        InputType.PointerRotation,
+                    //        InputType.Grip,
+                    //        InputType.GripPress,
+                    //        InputType.GripPosition,
+                    //        InputType.GripRotation,
+                    //        InputType.ButtonPress,
+                    //        InputType.Trigger,
+                    //        InputType.TriggerPress,
+                    //        InputType.ThumbStick,
+                    //        InputType.ThumbStickPress,
+                    //        InputType.Menu,
+                    //        InputType.Select,
+                    //    });
+                    //InputSources.Add(inputSource);
+                    //inputSystem.RaiseSourceDetected(inputSource);
                 }
                 else
                 {

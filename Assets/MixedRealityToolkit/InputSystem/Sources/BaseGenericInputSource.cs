@@ -26,27 +26,9 @@ namespace Microsoft.MixedReality.Toolkit.InputSystem.Sources
             SourceName = name;
             Pointers = pointers ?? new[] { GazeProvider.GazePointer };
             Interactions = new Dictionary<InputType, InteractionDefinition>();
-            foreach (var interaction in interactions)
+            for (uint i = 0; i < interactions.Length; i++)
             {
-                Interactions.Add(interaction.InputType, interaction);
-            }
-        }
-
-        public BaseGenericInputSource(string name, InputType[] capabilities, IMixedRealityPointer[] pointers = null)
-        {
-            SourceId = InputSystem.GenerateNewSourceId();
-            SourceName = name;
-            Pointers = pointers ?? new[] { GazeProvider.GazePointer };
-            Interactions = new Dictionary<InputType, InteractionDefinition>();
-            foreach (var capability in capabilities)
-            {
-                InteractionDefinition interaction = new InteractionDefinition()
-                {
-                    InputType = capability,
-                    Changed = false,
-                    Id = InputSystem.GenerateNewSourceId().ToString()
-                };
-                Interactions.Add(interaction.InputType, interaction);
+                Interactions.Add(interactions[i].InputType, new InteractionDefinition(i, interactions[i].AxisType, interactions[i].InputType));
             }
         }
 
@@ -61,7 +43,6 @@ namespace Microsoft.MixedReality.Toolkit.InputSystem.Sources
         public Handedness Handedness { get; } = Handedness.None;
 
         public Dictionary<InputType, InteractionDefinition> Interactions { get; }
-
 
         public virtual void SetupInputSource(InteractionSourceState interactionSourceState) { }
 
