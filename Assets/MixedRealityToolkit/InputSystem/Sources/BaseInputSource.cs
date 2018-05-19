@@ -45,7 +45,13 @@ namespace Microsoft.MixedReality.Toolkit.InputSystem.Sources
 
         public Handedness Handedness { get; } = Handedness.None;
 
-        public virtual Dictionary<InputType, InteractionDefinition> Interactions => new Dictionary<InputType, InteractionDefinition>() { { InputType.None, new InteractionDefinition() { InputType = InputType.None } } };
+        public virtual Dictionary<InputType, InteractionDefinition> Interactions => new Dictionary<InputType, InteractionDefinition>
+        {
+            {
+                InputType.None,
+                new InteractionDefinition(1, AxisType.None, InputType.None)
+            }
+        };
 
         public virtual void SetupInputSource(InteractionSourceState interactionSourceState) { }
 
@@ -96,7 +102,7 @@ namespace Microsoft.MixedReality.Toolkit.InputSystem.Sources
 
         bool IEqualityComparer.Equals(object x, object y)
         {
-            var left  = (IMixedRealityInputSource)x;
+            var left = (IMixedRealityInputSource)x;
             var right = (IMixedRealityInputSource)y;
             if (left != null && right != null)
             {

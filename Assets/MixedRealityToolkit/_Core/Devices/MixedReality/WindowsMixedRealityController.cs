@@ -38,11 +38,11 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Devices.WindowsMixedReality
 
         public InputSourceState InputSourceState { get; private set; }
 
-        public Handedness Handedness { get;  }
-        
+        public Handedness Handedness { get; }
+
         public IMixedRealityPointer[] Pointers { get; private set; }
-        
-        public Dictionary<InputType, InteractionDefinition> Interactions { get;}
+
+        public Dictionary<InputType, InteractionDefinition> Interactions { get; }
 
         #region Setup and Update functions
 
@@ -53,89 +53,37 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Devices.WindowsMixedReality
 
 
             //Add the Controller Pointer
-            Interactions.Add(InputType.Pointer, new InteractionDefinition()
-            {
-                AxisType = AxisType.SixDoF,
-                Changed = false,
-                InputType = InputType.Pointer
-            });
+            Interactions.Add(InputType.Pointer, new InteractionDefinition(1, AxisType.SixDoF, InputType.Pointer));
 
             // Add the Controller trigger
-            Interactions.Add(InputType.Trigger, new InteractionDefinition()
-            {
-                AxisType = AxisType.SingleAxis,
-                Changed = false,
-                InputType = InputType.Trigger
-            });
+            Interactions.Add(InputType.Trigger, new InteractionDefinition(2, AxisType.SingleAxis, InputType.Trigger));
 
             // If the controller has a Grip / Grasp button, add it to the controller capabilities
             if (interactionSourceState.source.supportsGrasp)
             {
-                Interactions.Add(InputType.Grip, new InteractionDefinition()
-                {
-                    AxisType = AxisType.SixDoF,
-                    Changed = false,
-                    InputType = InputType.Grip
-                });
-
-                Interactions.Add(InputType.GripPress, new InteractionDefinition()
-                {
-                    AxisType = AxisType.SingleAxis,
-                    Changed = false,
-                    InputType = InputType.GripPress
-                });
-
+                Interactions.Add(InputType.Grip, new InteractionDefinition(3, AxisType.SixDoF, InputType.Grip));
+                Interactions.Add(InputType.GripPress, new InteractionDefinition(4, AxisType.SingleAxis, InputType.GripPress));
             }
 
             // If the controller has a menu button, add it to the controller capabilities
             if (interactionSourceState.source.supportsMenu)
             {
-                Interactions.Add(InputType.Menu, new InteractionDefinition()
-                {
-                    AxisType = AxisType.Digital,
-                    Changed = false,
-                    InputType = InputType.Menu
-                });
+                Interactions.Add(InputType.Menu, new InteractionDefinition(5, AxisType.Digital, InputType.Menu));
             }
 
             // If the controller has a Thumbstick, add it to the controller capabilities
             if (interactionSourceState.source.supportsThumbstick)
             {
-                Interactions.Add(InputType.ThumbStick, new InteractionDefinition()
-                {
-                    AxisType = AxisType.DualAxis,
-                    Changed = false,
-                    InputType = InputType.ThumbStick
-                });
-                Interactions.Add(InputType.ThumbStickPress, new InteractionDefinition()
-                {
-                    AxisType = AxisType.Digital,
-                    Changed = false,
-                    InputType = InputType.ThumbStickPress
-                });
+                Interactions.Add(InputType.ThumbStick, new InteractionDefinition(6, AxisType.DualAxis, InputType.ThumbStick));
+                Interactions.Add(InputType.ThumbStickPress, new InteractionDefinition(7, AxisType.Digital, InputType.ThumbStickPress));
             }
 
             // If the controller has a Touchpad, add it to the controller capabilities
             if (interactionSourceState.source.supportsTouchpad)
             {
-                Interactions.Add(InputType.Touchpad, new InteractionDefinition()
-                {
-                    AxisType = AxisType.DualAxis,
-                    Changed = false,
-                    InputType = InputType.Touchpad
-                });
-                Interactions.Add(InputType.TouchpadTouch, new InteractionDefinition()
-                {
-                    AxisType = AxisType.Digital,
-                    Changed = false,
-                    InputType = InputType.TouchpadTouch
-                });
-                Interactions.Add(InputType.TouchpadPress, new InteractionDefinition()
-                {
-                    AxisType = AxisType.Digital,
-                    Changed = false,
-                    InputType = InputType.TouchpadPress
-                });
+                Interactions.Add(InputType.Touchpad, new InteractionDefinition(8, AxisType.DualAxis, InputType.Touchpad));
+                Interactions.Add(InputType.TouchpadTouch, new InteractionDefinition(9, AxisType.Digital, InputType.TouchpadTouch));
+                Interactions.Add(InputType.TouchpadPress, new InteractionDefinition(10, AxisType.Digital, InputType.TouchpadPress));
             }
         }
 

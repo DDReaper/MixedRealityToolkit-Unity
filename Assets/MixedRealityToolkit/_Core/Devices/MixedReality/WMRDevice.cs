@@ -190,7 +190,7 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Devices.WindowsMixedReality
                 default:
                     throw new ArgumentOutOfRangeException();
             }
-            if(sourceData.Interactions.ContainsKey(pressedInput)) sourceData.Interactions[pressedInput].SetValue(true);
+            if (sourceData.Interactions.ContainsKey(pressedInput)) sourceData.Interactions[pressedInput].SetValue(true);
             return pressedInput;
         }
 
@@ -257,17 +257,17 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Devices.WindowsMixedReality
 
             if (inputSource.Interactions.ContainsKey(InputType.Pointer) && inputSource.Interactions[InputType.Pointer].Changed)
             {
-                inputSystem.Raise6DofInputChanged(inputSource, inputSource.Handedness, InputType.Pointer, inputSource.Interactions[InputType.Pointer].GetValue<Tuple<Vector3, Quaternion>>());
+                inputSystem.Raise6DofInputChanged(inputSource, inputSource.Handedness, InputType.Pointer, inputSource.Interactions[InputType.Pointer].GetTransform());
             }
 
             if (inputSource.Interactions.ContainsKey(InputType.Pointer) && inputSource.Interactions[InputType.Grip].Changed)
             {
-                inputSystem.Raise6DofInputChanged(inputSource, inputSource.Handedness, InputType.Grip, inputSource.Interactions[InputType.Grip].GetValue<Tuple<Vector3, Quaternion>>());
+                inputSystem.Raise6DofInputChanged(inputSource, inputSource.Handedness, InputType.Grip, inputSource.Interactions[InputType.Grip].GetTransform());
             }
 
             if (inputSource.Interactions.ContainsKey(InputType.Pointer) && inputSource.Interactions[InputType.TouchpadTouch].Changed)
             {
-                if (inputSource.Interactions[InputType.TouchpadTouch].GetValue<bool>())
+                if (inputSource.Interactions[InputType.TouchpadTouch].GetBool())
                 {
                     inputSystem.RaiseOnInputDown(inputSource, inputSource.Handedness, InputType.TouchpadTouch);
                 }
@@ -279,17 +279,17 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Devices.WindowsMixedReality
 
             if (inputSource.Interactions.ContainsKey(InputType.Pointer) && inputSource.Interactions[InputType.Touchpad].Changed)
             {
-                inputSystem.Raise2DoFInputChanged(inputSource, inputSource.Handedness, InputType.Touchpad, inputSource.Interactions[InputType.Touchpad].GetValue<Vector2>());
+                inputSystem.Raise2DoFInputChanged(inputSource, inputSource.Handedness, InputType.Touchpad, inputSource.Interactions[InputType.Touchpad].GetVector2());
             }
 
             if (inputSource.Interactions.ContainsKey(InputType.Pointer) && inputSource.Interactions[InputType.ThumbStick].Changed)
             {
-                inputSystem.Raise2DoFInputChanged(inputSource, inputSource.Handedness, InputType.ThumbStick, inputSource.Interactions[InputType.ThumbStick].GetValue<Vector2>());
+                inputSystem.Raise2DoFInputChanged(inputSource, inputSource.Handedness, InputType.ThumbStick, inputSource.Interactions[InputType.ThumbStick].GetVector2());
             }
 
             if (inputSource.Interactions.ContainsKey(InputType.Pointer) && inputSource.Interactions[InputType.Trigger].Changed)
             {
-                inputSystem.RaiseOnInputPressed(inputSource, inputSource.Handedness, InputType.Select, inputSource.Interactions[InputType.Trigger].GetValue<float>());
+                inputSystem.RaiseOnInputPressed(inputSource, inputSource.Handedness, InputType.Select, inputSource.Interactions[InputType.Trigger].GetFloat());
             }
         }
 
