@@ -132,7 +132,7 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Definitions
         {
             if (AxisType == AxisType.SingleAxis)
             {
-                Changed = newValue.Equals(floatData);
+                Changed = !newValue.Equals(floatData);
                 floatData = newValue;
             }
         }
