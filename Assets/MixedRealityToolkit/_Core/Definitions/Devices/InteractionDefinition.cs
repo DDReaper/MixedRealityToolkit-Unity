@@ -176,7 +176,7 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Definitions.Devices
         {
             if (AxisType == AxisType.Raw)
             {
-                Changed = newValue != rawData;
+                Changed = newValue.Equals(rawData);
                 rawData = newValue;
             }
         }
