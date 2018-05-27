@@ -11,9 +11,10 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Definitions.Devices
     /// Maps the capabilities of controllers, one definition should exist for each interaction profile.<para/>
     /// <remarks>Interactions can be any input the controller supports such as buttons, triggers, joysticks, dpads, and more.</remarks>
     /// </summary>
+    [Serializable]
     public struct InteractionDefinition
     {
-        public InteractionDefinition(uint id, AxisType axisType, Devices.DeviceInputType inputType, InputAction inputAction) : this()
+        public InteractionDefinition(uint id, AxisType axisType, DeviceInputType inputType, InputAction inputAction) : this()
         {
             Id = id;
             AxisType = axisType;
@@ -52,35 +53,26 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Definitions.Devices
 
         #region Definition Data items
 
-        /// <summary>
-        /// The data storage for a Raw / None Axis type.
-        /// </summary>
+        [SerializeField]
         private object rawData;
 
-        /// <summary>
-        /// The data storage for a Digital Axis type.
-        /// </summary>
+        [SerializeField]
         private bool boolData;
 
-        /// <summary>
-        /// The data storage for a Single Axis type.
-        /// </summary>
+        [SerializeField]
         private float floatData;
 
-        /// <summary>
-        /// The data storage for a Dual Axis type.
-        /// </summary>
+        [SerializeField]
         private Vector2 vector2Data;
 
-        /// <summary>
-        /// The position data storage for a 3DoF type.
-        /// </summary>
+        [SerializeField]
         private Vector3 positionData;
 
-        /// <summary>
-        /// The rotation data storage for a 3DoF type.
-        /// </summary>
+        [SerializeField]
         private Quaternion rotationData;
+
+        [SerializeField]
+        private Tuple<Vector3, Quaternion> transformData;
 
         #endregion Definition Data items
 
@@ -104,7 +96,7 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Definitions.Devices
                 case AxisType.ThreeDoFRotation:
                     return (T)Convert.ChangeType(rotationData, typeof(T));
                 case AxisType.SixDoF:
-                    return (T)Convert.ChangeType(GetTransform(), typeof(T));
+                    return (T)Convert.ChangeType(transformData, typeof(T));
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -142,7 +134,7 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Definitions.Devices
 
         public Tuple<Vector3, Quaternion> GetTransform()
         {
-            return new Tuple<Vector3, Quaternion>(positionData, rotationData);
+            return transformData;
         }
 
         #endregion Get Operators
@@ -173,9 +165,7 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Definitions.Devices
                     rotationData = (Quaternion)rawData;
                     break;
                 case AxisType.SixDoF:
-                    var tuple = (Tuple<Vector3, Quaternion>)rawData;
-                    positionData = tuple.Item1;
-                    rotationData = tuple.Item2;
+                    transformData = (Tuple<Vector3, Quaternion>)rawData;
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -240,9 +230,10 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Definitions.Devices
         {
             if (AxisType == AxisType.SixDoF)
             {
-                Changed = newValue.Item1 != positionData || newValue.Item2 != rotationData;
+                Changed = transformData == null || newValue.Item1 != transformData.Item1 || newValue.Item2 != transformData.Item2;
                 positionData = newValue.Item1;
                 rotationData = newValue.Item2;
+                transformData = newValue;
             }
         }
 
