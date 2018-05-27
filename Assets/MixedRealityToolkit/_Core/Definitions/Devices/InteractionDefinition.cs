@@ -13,13 +13,6 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Definitions.Devices
     /// </summary>
     public struct InteractionDefinition
     {
-        public InteractionDefinition(uint id, AxisType axisType, DeviceInputType inputType) : this()
-        {
-            Id = id;
-            AxisType = axisType;
-            InputType = inputType;
-        }
-
         public InteractionDefinition(uint id, AxisType axisType, Devices.DeviceInputType inputType, InputAction inputAction) : this()
         {
             Id = id;
@@ -92,11 +85,14 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Definitions.Devices
         #endregion Definition Data items
 
         #region Get Operators
-		
-		public T GetValue<T>()
+
+        public T GetValue<T>()
         {
             switch (AxisType)
             {
+                case AxisType.None:
+                case AxisType.Raw:
+                    return (T)Convert.ChangeType(rawData, typeof(T));
                 case AxisType.Digital:
                     return (T)Convert.ChangeType(boolData, typeof(T));
                 case AxisType.SingleAxis:
@@ -109,10 +105,8 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Definitions.Devices
                     return (T)Convert.ChangeType(rotationData, typeof(T));
                 case AxisType.SixDoF:
                     return (T)Convert.ChangeType(GetTransform(), typeof(T));
-                case AxisType.Raw:
-                case AxisType.None:
                 default:
-                    return (T)Convert.ChangeType(rawData, typeof(T));
+                    throw new ArgumentOutOfRangeException();
             }
         }
 
@@ -148,12 +142,45 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Definitions.Devices
 
         public Tuple<Vector3, Quaternion> GetTransform()
         {
-            return new Tuple<Vector3, Quaternion>(positionData,rotationData);
+            return new Tuple<Vector3, Quaternion>(positionData, rotationData);
         }
 
         #endregion Get Operators
 
         #region Set Operators
+
+        public void SetValue<T>(T newValue)
+        {
+            switch (AxisType)
+            {
+                case AxisType.None:
+                case AxisType.Raw:
+                    rawData = newValue;
+                    break;
+                case AxisType.Digital:
+                    boolData = (bool)rawData;
+                    break;
+                case AxisType.SingleAxis:
+                    floatData = (float)rawData;
+                    break;
+                case AxisType.DualAxis:
+                    vector2Data = (Vector2)rawData;
+                    break;
+                case AxisType.ThreeDoFPosition:
+                    positionData = (Vector3)rawData;
+                    break;
+                case AxisType.ThreeDoFRotation:
+                    rotationData = (Quaternion)rawData;
+                    break;
+                case AxisType.SixDoF:
+                    var tuple = (Tuple<Vector3, Quaternion>)rawData;
+                    positionData = tuple.Item1;
+                    rotationData = tuple.Item2;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
 
         public void SetValue(object newValue)
         {
