@@ -20,6 +20,8 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Definitions.Devices
             AxisType = axisType;
             InputType = inputType;
             InputAction = inputAction;
+            positionData = Vector3.zero;
+            rotationData = Quaternion.identity;
         }
 
         #region Interaction Properties
@@ -196,7 +198,7 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Definitions.Devices
         {
             if (AxisType == AxisType.Raw)
             {
-                Changed = !newValue.Equals(rawData);
+                Changed = rawData != newValue;
                 rawData = newValue;
             }
             else
@@ -209,7 +211,7 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Definitions.Devices
         {
             if (AxisType == AxisType.Digital)
             {
-                Changed = newValue != boolData;
+                Changed = boolData != newValue;
                 boolData = newValue;
             }
             else
@@ -222,7 +224,7 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Definitions.Devices
         {
             if (AxisType == AxisType.SingleAxis)
             {
-                Changed = !newValue.Equals(floatData);
+                Changed = !floatData.Equals(newValue);
                 floatData = newValue;
             }
             else
@@ -235,7 +237,7 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Definitions.Devices
         {
             if (AxisType == AxisType.DualAxis)
             {
-                Changed = newValue != vector2Data;
+                Changed = vector2Data != newValue;
                 vector2Data = newValue;
             }
             else
@@ -248,7 +250,7 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Definitions.Devices
         {
             if (AxisType == AxisType.ThreeDoFPosition)
             {
-                Changed = newValue != positionData;
+                Changed = positionData != newValue;
                 positionData = newValue;
             }
             else
@@ -261,7 +263,7 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Definitions.Devices
         {
             if (AxisType == AxisType.ThreeDoFRotation)
             {
-                Changed = newValue != rotationData;
+                Changed = rotationData != newValue;
                 rotationData = newValue;
             }
             else

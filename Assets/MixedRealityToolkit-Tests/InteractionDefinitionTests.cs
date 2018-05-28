@@ -470,6 +470,453 @@ namespace Microsoft.MixedReality.Toolkit.Tests
 
         #endregion float
 
+        #region Vector2
+
+        [Test]
+        public void Test16_TestVector2Changed()
+        {
+            var inputDef = new InteractionDefinition(1, AxisType.DualAxis, DeviceInputType.None, new InputAction(1, "None"));
+            var testValue1 = Vector2.one;
+            var testValue2 = Vector2.zero;
+
+            var initialValue = inputDef.GetVector2();
+
+            Assert.True(initialValue == Vector2.zero);
+            Assert.IsFalse(inputDef.Changed);
+
+            inputDef.SetValue(testValue1);
+
+            Assert.IsTrue(inputDef.Changed);
+
+            var setValue1 = inputDef.GetVector2();
+
+            Assert.True(setValue1 == testValue1);
+            Assert.IsFalse(inputDef.Changed);
+
+            inputDef.SetValue(testValue2);
+
+            Assert.IsTrue(inputDef.Changed);
+
+            var setValue2 = inputDef.GetVector2();
+
+            Assert.True(setValue2 == testValue2);
+            Assert.IsFalse(inputDef.Changed);
+        }
+
+        [Test]
+        public void Test17_TestVector2NoChange()
+        {
+            var inputDef = new InteractionDefinition(1, AxisType.DualAxis, DeviceInputType.None, new InputAction(1, "None"));
+            var testValue = Vector2.one;
+
+            var initialValue = inputDef.GetVector2();
+
+            Assert.True(initialValue == Vector2.zero);
+            Assert.IsFalse(inputDef.Changed);
+
+            inputDef.SetValue(testValue);
+
+            Assert.IsTrue(inputDef.Changed);
+            // Make sure the second time we query it's false
+            Assert.IsFalse(inputDef.Changed);
+
+            inputDef.SetValue(testValue);
+
+            // Make sure if we set the same value it's false
+            Assert.IsFalse(inputDef.Changed);
+        }
+
+        [Test]
+        public void Test18_TestVector2GenericChanged()
+        {
+            var inputDef = new InteractionDefinition(1, AxisType.DualAxis, DeviceInputType.None, new InputAction(1, "None"));
+            var testValue1 = Vector2.one;
+            var testValue2 = Vector2.zero;
+
+            var initialValue = inputDef.GetValue<Vector2>();
+
+            Assert.True(initialValue == Vector2.zero);
+            Assert.IsFalse(inputDef.Changed);
+
+            inputDef.SetValue<Vector2>(testValue1);
+
+            Assert.IsTrue(inputDef.Changed);
+
+            var setValue1 = inputDef.GetValue<Vector2>();
+
+            Assert.True(setValue1 == testValue1);
+            Assert.IsFalse(inputDef.Changed);
+
+            inputDef.SetValue<Vector2>(testValue2);
+
+            Assert.IsTrue(inputDef.Changed);
+
+            var setValue2 = inputDef.GetValue<Vector2>();
+
+            Assert.True(setValue2 == testValue2);
+            Assert.IsFalse(inputDef.Changed);
+        }
+
+        [Test]
+        public void Test19_TestVector2GenericNoChange()
+        {
+            var inputDef = new InteractionDefinition(1, AxisType.DualAxis, DeviceInputType.None, new InputAction(1, "None"));
+            var testValue = Vector2.one;
+
+            var initialValue = inputDef.GetValue<Vector2>();
+
+            Assert.True(initialValue == Vector2.zero);
+            Assert.IsFalse(inputDef.Changed);
+
+            inputDef.SetValue<Vector2>(testValue);
+
+            Assert.IsTrue(inputDef.Changed);
+            // Make sure the second time we query it's false
+            Assert.IsFalse(inputDef.Changed);
+
+            inputDef.SetValue<Vector2>(testValue);
+
+            Assert.IsFalse(inputDef.Changed);
+            // Make sure if we set the same value it's false
+            Assert.IsFalse(inputDef.Changed);
+        }
+
+        [Test]
+        public void Test20_TestVector2DirectVsGenericSpeed()
+        {
+            var inputDef = new InteractionDefinition(1, AxisType.DualAxis, DeviceInputType.None, new InputAction(1, "None"));
+            var testValue1 = Vector2.one;
+            var testValue2 = Vector2.zero;
+
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+
+            for (int i = 0; i < SpeedTestIterations; i++)
+            {
+                var testValue = i % 2 == 0 ? testValue1 : testValue2;
+                inputDef.SetValue<Vector2>(testValue);
+                inputDef.GetValue<Vector2>();
+            }
+
+            var genericTime = stopwatch.ElapsedMilliseconds;
+
+            stopwatch.Restart();
+
+            for (int i = 0; i < SpeedTestIterations; i++)
+            {
+                var testValue = i % 2 == 0 ? testValue1 : testValue2;
+                inputDef.SetValue(testValue);
+                inputDef.GetVector2();
+            }
+
+            var directTime = stopwatch.ElapsedMilliseconds;
+
+            stopwatch.Stop();
+
+            UnityEngine.Debug.Log($"Vector2 Speed Test Results | Generic Time: {genericTime} | Direct Time: {directTime}");
+            Assert.Greater(genericTime, directTime);
+        }
+
+        #endregion Vector2
+
+        #region Vector3
+
+        [Test]
+        public void Test21_TestVector3Changed()
+        {
+            var inputDef = new InteractionDefinition(1, AxisType.ThreeDoFPosition, DeviceInputType.None, new InputAction(1, "None"));
+            var testValue1 = Vector3.one;
+            var testValue2 = Vector3.zero;
+
+            var initialValue = inputDef.GetPosition();
+
+            Assert.True(initialValue == Vector3.zero);
+            Assert.IsFalse(inputDef.Changed);
+
+            inputDef.SetValue(testValue1);
+
+            Assert.IsTrue(inputDef.Changed);
+
+            var setValue1 = inputDef.GetPosition();
+
+            Assert.True(setValue1 == testValue1);
+            Assert.IsFalse(inputDef.Changed);
+
+            inputDef.SetValue(testValue2);
+
+            Assert.IsTrue(inputDef.Changed);
+
+            var setValue2 = inputDef.GetPosition();
+
+            Assert.True(setValue2 == testValue2);
+            Assert.IsFalse(inputDef.Changed);
+        }
+
+        [Test]
+        public void Test22_TestVector3NoChange()
+        {
+            var inputDef = new InteractionDefinition(1, AxisType.ThreeDoFPosition, DeviceInputType.None, new InputAction(1, "None"));
+            var testValue = Vector3.one;
+
+            var initialValue = inputDef.GetPosition();
+
+            Assert.True(initialValue == Vector3.zero);
+            Assert.IsFalse(inputDef.Changed);
+
+            inputDef.SetValue(testValue);
+
+            Assert.IsTrue(inputDef.Changed);
+            // Make sure the second time we query it's false
+            Assert.IsFalse(inputDef.Changed);
+
+            inputDef.SetValue(testValue);
+
+            // Make sure if we set the same value it's false
+            Assert.IsFalse(inputDef.Changed);
+        }
+
+        [Test]
+        public void Test23_TestVector3GenericChanged()
+        {
+            var inputDef = new InteractionDefinition(1, AxisType.ThreeDoFPosition, DeviceInputType.None, new InputAction(1, "None"));
+            var testValue1 = Vector3.one;
+            var testValue2 = Vector3.zero;
+
+            var initialValue = inputDef.GetValue<Vector3>();
+
+            Assert.True(initialValue == Vector3.zero);
+            Assert.IsFalse(inputDef.Changed);
+
+            inputDef.SetValue<Vector3>(testValue1);
+
+            Assert.IsTrue(inputDef.Changed);
+
+            var setValue1 = inputDef.GetValue<Vector3>();
+
+            Assert.True(setValue1 == testValue1);
+            Assert.IsFalse(inputDef.Changed);
+
+            inputDef.SetValue<Vector3>(testValue2);
+
+            Assert.IsTrue(inputDef.Changed);
+
+            var setValue2 = inputDef.GetValue<Vector3>();
+
+            Assert.True(setValue2 == testValue2);
+            Assert.IsFalse(inputDef.Changed);
+        }
+
+        [Test]
+        public void Test24_TestVector3GenericNoChange()
+        {
+            var inputDef = new InteractionDefinition(1, AxisType.ThreeDoFPosition, DeviceInputType.None, new InputAction(1, "None"));
+            var testValue = Vector3.one;
+
+            var initialValue = inputDef.GetValue<Vector3>();
+
+            Assert.True(initialValue == Vector3.zero);
+            Assert.IsFalse(inputDef.Changed);
+
+            inputDef.SetValue<Vector3>(testValue);
+
+            Assert.IsTrue(inputDef.Changed);
+            // Make sure the second time we query it's false
+            Assert.IsFalse(inputDef.Changed);
+
+            inputDef.SetValue<Vector3>(testValue);
+
+            Assert.IsFalse(inputDef.Changed);
+            // Make sure if we set the same value it's false
+            Assert.IsFalse(inputDef.Changed);
+        }
+
+        [Test]
+        public void Test25_TestVector3DirectVsGenericSpeed()
+        {
+            var inputDef = new InteractionDefinition(1, AxisType.ThreeDoFPosition, DeviceInputType.None, new InputAction(1, "None"));
+            var testValue1 = Vector3.one;
+            var testValue2 = Vector3.zero;
+
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+
+            for (int i = 0; i < SpeedTestIterations; i++)
+            {
+                var testValue = i % 2 == 0 ? testValue1 : testValue2;
+                inputDef.SetValue<Vector3>(testValue);
+                inputDef.GetValue<Vector3>();
+            }
+
+            var genericTime = stopwatch.ElapsedMilliseconds;
+
+            stopwatch.Restart();
+
+            for (int i = 0; i < SpeedTestIterations; i++)
+            {
+                var testValue = i % 2 == 0 ? testValue1 : testValue2;
+                inputDef.SetValue(testValue);
+                inputDef.GetPosition();
+            }
+
+            var directTime = stopwatch.ElapsedMilliseconds;
+
+            stopwatch.Stop();
+
+            UnityEngine.Debug.Log($"Vector3 Speed Test Results | Generic Time: {genericTime} | Direct Time: {directTime}");
+            Assert.Greater(genericTime, directTime);
+        }
+
+        #endregion Vector3
+
+        #region Quaternion
+
+        [Test]
+        public void Test26_TestQuaternionChanged()
+        {
+            var inputDef = new InteractionDefinition(1, AxisType.ThreeDoFRotation, DeviceInputType.None, new InputAction(1, "None"));
+            var testValue1 = Quaternion.Euler(45f, 45f, 45f);
+            var testValue2 = Quaternion.identity;
+
+            var initialValue = inputDef.GetRotation();
+
+            Assert.True(initialValue == Quaternion.identity);
+            Assert.IsFalse(inputDef.Changed);
+
+            inputDef.SetValue(testValue1);
+
+            Assert.IsTrue(inputDef.Changed);
+
+            var setValue1 = inputDef.GetRotation();
+
+            Assert.True(setValue1 == testValue1);
+            Assert.IsFalse(inputDef.Changed);
+
+            inputDef.SetValue(testValue2);
+
+            Assert.IsTrue(inputDef.Changed);
+
+            var setValue2 = inputDef.GetRotation();
+
+            Assert.True(setValue2 == testValue2);
+            Assert.IsFalse(inputDef.Changed);
+        }
+
+        [Test]
+        public void Test27_TestQuaternionNoChange()
+        {
+            var inputDef = new InteractionDefinition(1, AxisType.ThreeDoFRotation, DeviceInputType.None, new InputAction(1, "None"));
+            var testValue = Quaternion.Euler(45f, 45f, 45f);
+
+            var initialValue = inputDef.GetRotation();
+
+            Assert.True(initialValue == Quaternion.identity);
+            Assert.IsFalse(inputDef.Changed);
+
+            inputDef.SetValue(testValue);
+
+            Assert.IsTrue(inputDef.Changed);
+            // Make sure the second time we query it's false
+            Assert.IsFalse(inputDef.Changed);
+
+            inputDef.SetValue(testValue);
+
+            // Make sure if we set the same value it's false
+            Assert.IsFalse(inputDef.Changed);
+        }
+
+        [Test]
+        public void Test28_TestQuaternionGenericChanged()
+        {
+            var inputDef = new InteractionDefinition(1, AxisType.ThreeDoFRotation, DeviceInputType.None, new InputAction(1, "None"));
+            var testValue1 = Quaternion.Euler(45f, 45f, 45f);
+            var testValue2 = Quaternion.identity;
+
+            var initialValue = inputDef.GetValue<Quaternion>();
+
+            Assert.True(initialValue == Quaternion.identity);
+            Assert.IsFalse(inputDef.Changed);
+
+            inputDef.SetValue<Quaternion>(testValue1);
+
+            Assert.IsTrue(inputDef.Changed);
+
+            var setValue1 = inputDef.GetValue<Quaternion>();
+
+            Assert.True(setValue1 == testValue1);
+            Assert.IsFalse(inputDef.Changed);
+
+            inputDef.SetValue<Quaternion>(testValue2);
+
+            Assert.IsTrue(inputDef.Changed);
+
+            var setValue2 = inputDef.GetValue<Quaternion>();
+
+            Assert.True(setValue2 == testValue2);
+            Assert.IsFalse(inputDef.Changed);
+        }
+
+        [Test]
+        public void Test29_TestQuaternionGenericNoChange()
+        {
+            var inputDef = new InteractionDefinition(1, AxisType.ThreeDoFRotation, DeviceInputType.None, new InputAction(1, "None"));
+            var testValue = Quaternion.Euler(45f, 45f, 45f);
+
+            var initialValue = inputDef.GetValue<Quaternion>();
+
+            Assert.True(initialValue == Quaternion.identity);
+            Assert.IsFalse(inputDef.Changed);
+
+            inputDef.SetValue<Quaternion>(testValue);
+
+            Assert.IsTrue(inputDef.Changed);
+            // Make sure the second time we query it's false
+            Assert.IsFalse(inputDef.Changed);
+
+            inputDef.SetValue<Quaternion>(testValue);
+
+            Assert.IsFalse(inputDef.Changed);
+            // Make sure if we set the same value it's false
+            Assert.IsFalse(inputDef.Changed);
+        }
+
+        [Test]
+        public void Test30_TestQuaternionDirectVsGenericSpeed()
+        {
+            var inputDef = new InteractionDefinition(1, AxisType.ThreeDoFRotation, DeviceInputType.None, new InputAction(1, "None"));
+            var testValue1 = Quaternion.Euler(45f, 45f, 45f);
+            var testValue2 = Quaternion.identity;
+
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+
+            for (int i = 0; i < SpeedTestIterations; i++)
+            {
+                var testValue = i % 2 == 0 ? testValue1 : testValue2;
+                inputDef.SetValue<Quaternion>(testValue);
+                inputDef.GetValue<Quaternion>();
+            }
+
+            var genericTime = stopwatch.ElapsedMilliseconds;
+
+            stopwatch.Restart();
+
+            for (int i = 0; i < SpeedTestIterations; i++)
+            {
+                var testValue = i % 2 == 0 ? testValue1 : testValue2;
+                inputDef.SetValue(testValue);
+                inputDef.GetRotation();
+            }
+
+            var directTime = stopwatch.ElapsedMilliseconds;
+
+            stopwatch.Stop();
+
+            UnityEngine.Debug.Log($"Quaternion Speed Test Results | Generic Time: {genericTime} | Direct Time: {directTime}");
+            Assert.Greater(genericTime, directTime);
+        }
+
+        #endregion Quaternion
+
         #region Tuples
 
         [Test]
