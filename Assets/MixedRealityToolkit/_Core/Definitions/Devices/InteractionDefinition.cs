@@ -42,12 +42,29 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Definitions.Devices
         /// <summary>
         /// Action to be raised to the Input Manager when the input data has changed.
         /// </summary>
-        public InputAction InputAction { get; set; }
+        public InputAction InputAction { get; }
 
         /// <summary>
         /// Has the value changed since the last reading.
         /// </summary>
-        public bool Changed { get; private set; }
+        public bool Changed
+        {
+            get
+            {
+                bool returnValue = changed;
+
+                if (changed)
+                {
+                    changed = false;
+                }
+
+                return returnValue;
+            }
+            private set
+            {
+                changed = value;
+            }
+        }
 
         #endregion Interaction Properties
 
@@ -73,6 +90,9 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Definitions.Devices
 
         [SerializeField]
         private Tuple<Vector3, Quaternion> transformData;
+
+        [SerializeField]
+        private bool changed;
 
         #endregion Definition Data items
 
@@ -147,34 +167,25 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Definitions.Devices
             {
                 case AxisType.None:
                 case AxisType.Raw:
-                    Changed = !newValue.Equals(rawData);
-                    rawData = newValue;
+                    SetValue((object)newValue);
                     break;
                 case AxisType.Digital:
-                    Changed = !newValue.Equals(boolData);
-                    boolData = (bool)Convert.ChangeType(newValue, typeof(bool));
+                    SetValue((bool)Convert.ChangeType(newValue, typeof(bool)));
                     break;
                 case AxisType.SingleAxis:
-                    Changed = !newValue.Equals(floatData);
-                    floatData = (float)Convert.ChangeType(newValue, typeof(float));
+                    SetValue((float)Convert.ChangeType(newValue, typeof(float)));
                     break;
                 case AxisType.DualAxis:
-                    Changed = !newValue.Equals(vector2Data);
-                    vector2Data = (Vector2)Convert.ChangeType(newValue, typeof(Vector2));
+                    SetValue((Vector2)Convert.ChangeType(newValue, typeof(Vector2)));
                     break;
                 case AxisType.ThreeDoFPosition:
-                    Changed = !newValue.Equals(positionData);
-                    positionData = (Vector3)Convert.ChangeType(newValue, typeof(Vector3));
+                    SetValue((Vector3)Convert.ChangeType(newValue, typeof(Vector3)));
                     break;
                 case AxisType.ThreeDoFRotation:
-                    Changed = !newValue.Equals(rotationData);
-                    rotationData = (Quaternion)Convert.ChangeType(newValue, typeof(Quaternion));
+                    SetValue((Quaternion)Convert.ChangeType(newValue, typeof(Quaternion)));
                     break;
                 case AxisType.SixDoF:
-                    Changed = (transformData == null && newValue != null) || !newValue.Equals(transformData);
-                    transformData = (Tuple<Vector3, Quaternion>)Convert.ChangeType(newValue, typeof(Tuple<Vector3,Quaternion>));
-                    positionData = transformData.Item1;
-                    rotationData = transformData.Item2;
+                    SetValue((Tuple<Vector3, Quaternion>)Convert.ChangeType(newValue, typeof(Tuple<Vector3, Quaternion>)));
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -188,6 +199,10 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Definitions.Devices
                 Changed = !newValue.Equals(rawData);
                 rawData = newValue;
             }
+            else
+            {
+                throw new InvalidOperationException();
+            }
         }
 
         public void SetValue(bool newValue)
@@ -196,6 +211,10 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Definitions.Devices
             {
                 Changed = newValue != boolData;
                 boolData = newValue;
+            }
+            else
+            {
+                throw new InvalidOperationException();
             }
         }
 
@@ -206,14 +225,22 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Definitions.Devices
                 Changed = !newValue.Equals(floatData);
                 floatData = newValue;
             }
+            else
+            {
+                throw new InvalidOperationException();
+            }
         }
 
         public void SetValue(Vector2 newValue)
         {
             if (AxisType == AxisType.DualAxis)
             {
-                Changed = !newValue.Equals(vector2Data);
+                Changed = newValue != vector2Data;
                 vector2Data = newValue;
+            }
+            else
+            {
+                throw new InvalidOperationException();
             }
         }
 
@@ -221,8 +248,12 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Definitions.Devices
         {
             if (AxisType == AxisType.ThreeDoFPosition)
             {
-                Changed = !newValue.Equals(positionData);
+                Changed = newValue != positionData;
                 positionData = newValue;
+            }
+            else
+            {
+                throw new InvalidOperationException();
             }
         }
 
@@ -230,8 +261,12 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Definitions.Devices
         {
             if (AxisType == AxisType.ThreeDoFRotation)
             {
-                Changed = !newValue.Equals(rotationData);
+                Changed = newValue != rotationData;
                 rotationData = newValue;
+            }
+            else
+            {
+                throw new InvalidOperationException();
             }
         }
 
@@ -239,10 +274,27 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Definitions.Devices
         {
             if (AxisType == AxisType.SixDoF)
             {
-                Changed = (transformData == null && newValue != null) || !transformData.Equals(newValue);
-                positionData = newValue.Item1;
-                rotationData = newValue.Item2;
+                Changed = transformData == null && newValue != null ||
+                          transformData != null && newValue == null ||
+                          transformData != null && newValue != null &&
+                          (transformData.Item1 != newValue.Item1 || transformData.Item2 != newValue.Item2);
+
                 transformData = newValue;
+
+                if (transformData != null)
+                {
+                    positionData = transformData.Item1;
+                    rotationData = transformData.Item2;
+                }
+                else
+                {
+                    positionData = Vector3.zero;
+                    rotationData = Quaternion.identity;
+                }
+            }
+            else
+            {
+                throw new InvalidOperationException();
             }
         }
 
