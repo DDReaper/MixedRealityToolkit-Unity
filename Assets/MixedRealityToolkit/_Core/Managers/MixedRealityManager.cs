@@ -2,6 +2,7 @@
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
 using Microsoft.MixedReality.Toolkit.Internal.Definitions;
+using Microsoft.MixedReality.Toolkit.Internal.Devices.WindowsMixedReality;
 using Microsoft.MixedReality.Toolkit.Internal.Interfaces;
 using Microsoft.MixedReality.Toolkit.Internal.Interfaces.InputSystem;
 using System;
@@ -123,6 +124,7 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Managers
 
             #region ActiveSDK Discovery
             // TODO Microsoft.MixedReality.Toolkit - Active SDK Discovery
+            activeDevice = new WindowsMixedRealityDeviceManager("Mixed Reality Device manager", 10);
             #endregion ActiveSDK Discovery
 
             #region  Managers Registration
@@ -145,7 +147,9 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Managers
 
             #region SDK Initialization
             // TODO Microsoft.MixedReality.Toolkit - SDK Initialization
-            activeDevice?.Initialize();
+            //activeDevice?.Initialize();
+            AddManager(typeof(IMixedRealityDevice), activeDevice);
+
             #endregion SDK Initialization
 
             #region Managers Initialization

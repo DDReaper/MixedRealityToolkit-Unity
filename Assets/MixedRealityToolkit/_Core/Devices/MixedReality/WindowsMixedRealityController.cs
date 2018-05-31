@@ -1,39 +1,251 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
-using System.Collections.Generic;
 using Microsoft.MixedReality.Toolkit.Internal.Definitions.Devices;
+using Microsoft.MixedReality.Toolkit.Internal.Definitions.InputSystem;
 using Microsoft.MixedReality.Toolkit.Internal.Definitions.Utilities;
+using Microsoft.MixedReality.Toolkit.Internal.Extensions;
+using Microsoft.MixedReality.Toolkit.Internal.Interfaces;
 using Microsoft.MixedReality.Toolkit.Internal.Interfaces.InputSystem;
+using Microsoft.MixedReality.Toolkit.Internal.Utilities;
+using System;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.XR.WSA.Input;
 
 namespace Microsoft.MixedReality.Toolkit.Internal.Devices.WindowsMixedReality
 {
     public struct WindowsMixedRealityController : IMixedRealityController
     {
-        public WindowsMixedRealityController(ControllerState controllerState, Handedness controllerHandedness, IMixedRealityInputSource inputSource, Dictionary<DeviceInputType, InteractionMapping> interactions) : this()
+        #region Private properties
+
+        private bool controllerTracked;
+        private Vector3 controllerPosition;
+        private Vector3 pointerPosition;
+        private Vector3 gripPosition;
+        private Quaternion controllerRotation;
+        private Quaternion pointerRotation;
+        private Quaternion gripRotation;
+
+        #endregion Private properties
+
+        public WindowsMixedRealityController(ControllerState controllerState, Handedness controllerHandedness, IMixedRealityInputSource inputSource, Dictionary<DeviceInputType, InteractionMapping> interactions = null) : this()
         {
             ControllerState = controllerState;
             ControllerHandedness = controllerHandedness;
             InputSource = inputSource;
-            Interactions = interactions;
+            Interactions = interactions ?? new Dictionary<DeviceInputType, InteractionMapping>();
+
+            controllerTracked = false;
+            controllerPosition = pointerPosition = gripPosition = Vector3.zero;
+            controllerRotation = pointerRotation = gripRotation = Quaternion.identity;
         }
 
-        public ControllerState ControllerState { get; }
+        #region IMixedRealityController Interface Members
+
+        public ControllerState ControllerState { get; private set; }
 
         public Handedness ControllerHandedness { get; }
 
-        public IMixedRealityInputSource InputSource { get; }
+        public IMixedRealityInputSource InputSource { get; private set; }
 
-        public Dictionary<DeviceInputType, InteractionMapping> Interactions { get; }
+        public Dictionary<DeviceInputType, InteractionMapping> Interactions { get; private set; }
 
-        public void SetupInputSource<T>(IMixedRealityInputSystem inputSystem, T state)
+        public void SetupInputSource<T>(T state)
         {
-            // TODO
+            InteractionSourceState interactionSourceState = CheckIfValidInteractionSourceState(state);
+            SetupFromInteractionSource(interactionSourceState);
         }
 
-        public void UpdateInputSource<T>(IMixedRealityInputSystem inputSystem, T state)
+        public void UpdateInputSource<T>(T state)
         {
-            //TODO
+            InteractionSourceState interactionSourceState = CheckIfValidInteractionSourceState(state);
+            UpdateFromInteractionSource(interactionSourceState);
         }
+
+        #endregion IMixedRealityInputSource Interface Members
+
+        #region Setup and Update functions
+
+        public void SetupFromInteractionSource(InteractionSourceState interactionSourceState)
+        {
+            //Update the Tracked state of the controller
+            UpdateControllerData(interactionSourceState);
+
+            MixedRealityControllerMapping controllerMapping = Managers.MixedRealityManager.Instance.ActiveProfile.GetControllerMapping(typeof(WindowsMixedRealityController), ControllerHandedness);
+            //MixedRealityControllerMappingProfile controllerMapping = Managers.MixedRealityManager.Instance.ActiveProfile.GetControllerMapping<WindowsMixedRealityController>(ControllerHandedness);
+            if (controllerMapping.Interactions?.Length > 0)
+            {
+                SetupFromMapping(controllerMapping.Interactions);
+            }
+            else
+            {
+                SetupWMRControllerDefaults(interactionSourceState);
+            }
+        }
+
+        private void SetupFromMapping(InteractionMapping[] mappings)
+        {
+            for (uint i = 0; i < mappings.Length; i++)
+            {
+                // Add interaction for Mapping
+                Interactions.Add(mappings[i].InputType, new InteractionMapping(i, mappings[i].AxisType, mappings[i].InputType, mappings[i].InputAction));
+            }
+        }
+
+        private void SetupWMRControllerDefaults(InteractionSourceState interactionSourceState)
+        {
+            InputAction[] inputActions = Managers.MixedRealityManager.Instance.ActiveProfile.InputActionsProfile.InputActions;
+            if (inputActions == null)
+            {
+                return;
+            }
+            //Add the Controller Pointer
+            Interactions.Add(DeviceInputType.SpatialPointer, new InteractionMapping(1, AxisType.SixDoF, DeviceInputType.SpatialPointer, inputActions.GetActionByName("Select"))); // Note will convert these lookups to indexes
+
+            // Add the Controller trigger
+            Interactions.Add(DeviceInputType.Trigger, new InteractionMapping(2, AxisType.SingleAxis, DeviceInputType.Trigger, inputActions.GetActionByName("Select")));
+
+            // If the controller has a Grip / Grasp button, add it to the controller capabilities
+            if (interactionSourceState.source.supportsGrasp)
+            {
+                Interactions.Add(DeviceInputType.SpatialGrip, new InteractionMapping(3, AxisType.SixDoF, DeviceInputType.SpatialGrip, inputActions.GetActionByName("Grip")));
+
+                Interactions.Add(DeviceInputType.GripPress, new InteractionMapping(4, AxisType.SingleAxis, DeviceInputType.GripPress, inputActions.GetActionByName("Grab")));
+            }
+
+            // If the controller has a menu button, add it to the controller capabilities
+            if (interactionSourceState.source.supportsMenu)
+            {
+                Interactions.Add(DeviceInputType.Menu, new InteractionMapping(5, AxisType.Digital, DeviceInputType.Menu, inputActions.GetActionByName("Menu")));
+            }
+
+            // If the controller has a Thumbstick, add it to the controller capabilities
+            if (interactionSourceState.source.supportsThumbstick)
+            {
+                Interactions.Add(DeviceInputType.ThumbStick, new InteractionMapping(6, AxisType.DualAxis, DeviceInputType.ThumbStick, ControllerHandedness == Handedness.Left ? inputActions.GetActionByName("Walk") : inputActions.GetActionByName("Look")));
+                Interactions.Add(DeviceInputType.ThumbStickPress, new InteractionMapping(7, AxisType.Digital, DeviceInputType.ThumbStickPress, inputActions.GetActionByName("Interact")));
+            }
+
+            // If the controller has a Touchpad, add it to the controller capabilities
+            if (interactionSourceState.source.supportsTouchpad)
+            {
+                Interactions.Add(DeviceInputType.Touchpad, new InteractionMapping(8, AxisType.DualAxis, DeviceInputType.Touchpad, inputActions.GetActionByName("Inventory")));
+                Interactions.Add(DeviceInputType.TouchpadTouch, new InteractionMapping(9, AxisType.Digital, DeviceInputType.TouchpadTouch, inputActions.GetActionByName("Pickup")));
+                Interactions.Add(DeviceInputType.TouchpadPress, new InteractionMapping(10, AxisType.Digital, DeviceInputType.TouchpadPress, inputActions.GetActionByName("Pickup")));
+            }
+        }
+
+        public void UpdateFromInteractionSource(InteractionSourceState interactionSourceState)
+        {
+            //Debug.Assert(interactionSourceState.source.id == SourceId, "An UpdateSourceState call happened with mismatched source ID.");
+            // TODO - Do we need Kind?
+            //Debug.Assert(interactionSourceState.source.kind == sourceData.Source.kind, "An UpdateSourceState call happened with mismatched source kind.");
+
+            // Update Controller
+            // TODO - Controller currently not accepted by InputSystem, only InteractionState captured
+            // TODO - May need to be more granular with checks if we are allowing user to configure :S  
+            // TODO - Need to think of a better way to validate options, multiple Contains aren't good, maybe an extension?
+            UpdateControllerData(interactionSourceState);
+
+            // Update Pointer
+            if (Interactions.ContainsKey(DeviceInputType.SpatialPointer)) UpdatePointerData(interactionSourceState);
+
+            // Update Grip
+            if (Interactions.ContainsKey(DeviceInputType.SpatialGrip)) UpdateGripData(interactionSourceState);
+
+            // Update Touchpad
+            if (Interactions.ContainsKey(DeviceInputType.Touchpad) || Interactions.ContainsKey(DeviceInputType.TouchpadTouch)) UpdateTouchPadData(interactionSourceState);
+
+            // Update Thumbstick
+            if (Interactions.ContainsKey(DeviceInputType.Thumb)) UpdateThumbStickData(interactionSourceState);
+
+            // Update Trigger
+            if (Interactions.ContainsKey(DeviceInputType.Trigger)) UpdateTriggerData(interactionSourceState);
+        }
+
+        #region Update data functions
+
+        private void UpdateControllerData(InteractionSourceState interactionSourceState)
+        {
+            // Get Controller start position and tracked state
+            controllerTracked = interactionSourceState.sourcePose.TryGetPosition(out controllerPosition);
+            ControllerState = controllerTracked ? ControllerState.Tracked : ControllerState.NotTracked;
+
+            // Get Controller start rotation
+            interactionSourceState.sourcePose.TryGetRotation(out controllerRotation);
+            if (controllerPosition == Vector3.zero || controllerRotation == Quaternion.identity)
+            {
+                Debug.LogWarning($"No controller data detected");
+            }
+        }
+
+        private void UpdatePointerData(InteractionSourceState interactionSourceState)
+        {
+            interactionSourceState.sourcePose.TryGetPosition(out pointerPosition, InteractionSourceNode.Pointer);
+            interactionSourceState.sourcePose.TryGetRotation(out pointerRotation, InteractionSourceNode.Pointer);
+
+            //TODO - Review, as we no longer have a MixedRealityCameraParent, this will cause issue.
+            if (CameraCache.Main.transform.parent != null)
+            {
+                pointerPosition = CameraCache.Main.transform.parent.TransformPoint(pointerPosition);
+                pointerRotation.eulerAngles = CameraCache.Main.transform.parent.TransformDirection(pointerRotation.eulerAngles);
+            }
+            //Interactions[DeviceInputType.SpatialPointer].SetValue(new Tuple<Vector3, Quaternion>(pointerPosition, pointerRotation));
+            Interactions.SetDictionaryValue(DeviceInputType.SpatialPointer, new Tuple<Vector3, Quaternion>(pointerPosition, pointerRotation));
+        }
+
+        private void UpdateGripData(InteractionSourceState interactionSourceState)
+        {
+            interactionSourceState.sourcePose.TryGetPosition(out gripPosition, InteractionSourceNode.Grip);
+            interactionSourceState.sourcePose.TryGetRotation(out gripRotation, InteractionSourceNode.Grip);
+
+            //TODO - Review, as we no longer have a MixedRealityCameraParent, this will cause issue.
+            if (CameraCache.Main.transform.parent != null)
+            {
+                gripPosition = CameraCache.Main.transform.parent.TransformPoint(gripPosition);
+                gripRotation.eulerAngles = CameraCache.Main.transform.parent.TransformDirection(gripRotation.eulerAngles);
+            }
+            //Interactions[DeviceInputType.SpatialGrip].SetValue(new Tuple<Vector3, Quaternion>(gripPosition, gripRotation));
+            Interactions.SetDictionaryValue(DeviceInputType.SpatialGrip, new Tuple<Vector3, Quaternion>(gripPosition, gripRotation));
+        }
+
+        private void UpdateTouchPadData(InteractionSourceState interactionSourceState)
+        {
+            if (interactionSourceState.touchpadTouched)
+            {
+                if (Interactions.ContainsKey(DeviceInputType.TouchpadTouch)) Interactions.SetDictionaryValue(DeviceInputType.TouchpadTouch, interactionSourceState.touchpadTouched);  //Interactions[DeviceInputType.TouchpadTouch].SetValue(interactionSourceState.touchpadTouched);
+                if (Interactions.ContainsKey(DeviceInputType.TouchpadPress)) Interactions.SetDictionaryValue(DeviceInputType.TouchpadPress, interactionSourceState.touchpadPressed);  //Interactions[DeviceInputType.TouchpadPress].SetValue(interactionSourceState.touchpadPressed);
+                if (Interactions.ContainsKey(DeviceInputType.Touchpad)) Interactions.SetDictionaryValue(DeviceInputType.Touchpad, interactionSourceState.touchpadPosition);  //Interactions[DeviceInputType.Touchpad].SetValue(interactionSourceState.touchpadPosition);
+            }
+        }
+
+        private void UpdateThumbStickData(InteractionSourceState interactionSourceState)
+        {
+            if (Interactions.ContainsKey(DeviceInputType.ThumbStickPress)) Interactions.SetDictionaryValue(DeviceInputType.ThumbStickPress, interactionSourceState.thumbstickPressed);  //Interactions[DeviceInputType.ThumbStickPress].SetValue(interactionSourceState.thumbstickPressed);
+            //Interactions[DeviceInputType.ThumbStick].SetValue(interactionSourceState.thumbstickPosition);
+            Interactions.SetDictionaryValue(DeviceInputType.ThumbStick, interactionSourceState.thumbstickPosition);
+        }
+
+        private void UpdateTriggerData(InteractionSourceState interactionSourceState)
+        {
+            if (Interactions.ContainsKey(DeviceInputType.TriggerPress)) Interactions.SetDictionaryValue(DeviceInputType.TriggerPress, interactionSourceState.selectPressed);  //Interactions[DeviceInputType.TriggerPress].SetValue(interactionSourceState.selectPressed);
+            //Interactions[DeviceInputType.Trigger].SetValue(interactionSourceState.selectPressedAmount);
+            Interactions.SetDictionaryValue(DeviceInputType.Trigger, interactionSourceState.selectPressedAmount);
+        }
+
+        #endregion Update data functions
+
+        #endregion Setup and Update functions
+
+        #region Utilities
+        private static InteractionSourceState CheckIfValidInteractionSourceState<T>(T state)
+        {
+            InteractionSourceState interactionSourceState = (InteractionSourceState)Convert.ChangeType(state, typeof(InteractionSourceState));
+            if (interactionSourceState.source.id == 0) { throw new ArgumentOutOfRangeException(nameof(state), "Incorrect state type provided to controller,did you send an InteractionSourceState?"); }
+
+            return interactionSourceState;
+        }
+        #endregion Utilities
     }
 }
