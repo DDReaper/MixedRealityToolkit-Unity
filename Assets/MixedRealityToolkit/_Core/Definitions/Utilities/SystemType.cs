@@ -19,7 +19,14 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Definitions.Utilities
 
         public static string GetReference(Type type)
         {
-            return type != null ? $"{type.FullName}, {type.Assembly.GetName().Name}" : string.Empty;
+            if (type == null)
+            {
+                return string.Empty;
+            }
+
+            string[] qualifiedNameComponents = type.AssemblyQualifiedName.Split(new char[] { ',' });
+            Debug.Assert(qualifiedNameComponents.Length >= 2);
+            return $"{qualifiedNameComponents[0]}, {qualifiedNameComponents[1].Trim()}";
         }
 
         /// <summary>
