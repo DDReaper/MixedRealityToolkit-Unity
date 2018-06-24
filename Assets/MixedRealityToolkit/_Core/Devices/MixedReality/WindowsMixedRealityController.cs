@@ -53,10 +53,10 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Devices.WindowsMixedReality
         /// Load the Interaction mappings for this controller from the configured Controller Mapping profile
         /// </summary>
         /// <param name="mappings">Configured mappings from a controller mapping profile</param>
-        private void SetupFromMapping(IReadOnlyList<IMixedRealityInteractionMapping> mappings)
+        private void SetupFromMapping(IMixedRealityInteractionMapping[] mappings)
         {
             var interactions = new List<IMixedRealityInteractionMapping>();
-            for (int i = 0; i < mappings.Count; i++)
+            for (int i = 0; i < mappings.Length; i++)
             {
                 switch (mappings[i].AxisType)
                 {
