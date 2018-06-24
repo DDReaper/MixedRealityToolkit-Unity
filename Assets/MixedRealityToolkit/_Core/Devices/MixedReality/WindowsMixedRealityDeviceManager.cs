@@ -40,7 +40,7 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Devices.WindowsMixedReality
             // NOTE: We update the source state data, in case an app wants to query it on source detected.
             for (var i = 0; i < states.Length; i++)
             {
-                GetOrAddController(states[i])?.UpdateController(states[i]);
+                GetOrAddWindowsMixedRealityController(states[i])?.UpdateController(states[i]);
             }
         }
 
@@ -82,7 +82,7 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Devices.WindowsMixedReality
         /// </summary>
         /// <param name="interactionSourceState">Source State provided by the SDK</param>
         /// <returns>New or Existing Controller Input Source</returns>
-        private WindowsMixedRealityController GetOrAddController(InteractionSourceState interactionSourceState)
+        private WindowsMixedRealityController GetOrAddWindowsMixedRealityController(InteractionSourceState interactionSourceState)
         {
             //If a device is already registered with the ID provided, just return it.
             if (activeControllers.ContainsKey(interactionSourceState.source.id))
@@ -123,7 +123,7 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Devices.WindowsMixedReality
         /// <param name="interactionSourceState">Source State provided by the SDK to remove</param>
         private void RemoveWindowsMixedRealityController(InteractionSourceState interactionSourceState)
         {
-            InputSystem?.RaiseSourceLost(GetOrAddController(interactionSourceState)?.InputSource);
+            InputSystem?.RaiseSourceLost(GetOrAddWindowsMixedRealityController(interactionSourceState)?.InputSource);
             activeControllers.Remove(interactionSourceState.source.id);
         }
 
@@ -137,7 +137,7 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Devices.WindowsMixedReality
         /// <param name="args">SDK source detected event arguments</param>
         private void InteractionManager_InteractionSourceDetected(InteractionSourceDetectedEventArgs args)
         {
-            InputSystem?.RaiseSourceDetected(GetOrAddController(args.state)?.InputSource);
+            InputSystem?.RaiseSourceDetected(GetOrAddWindowsMixedRealityController(args.state)?.InputSource);
         }
 
         /// <summary>
@@ -146,7 +146,7 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Devices.WindowsMixedReality
         /// <param name="args">SDK source updated event arguments</param>
         private void InteractionManager_InteractionSourceUpdated(InteractionSourceUpdatedEventArgs args)
         {
-            GetOrAddController(args.state)?.UpdateController(args.state);
+            GetOrAddWindowsMixedRealityController(args.state)?.UpdateController(args.state);
         }
 
         /// <summary>
@@ -155,7 +155,7 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Devices.WindowsMixedReality
         /// <param name="args">SDK source pressed event arguments</param>
         private void InteractionManager_InteractionSourcePressed(InteractionSourcePressedEventArgs args)
         {
-            GetOrAddController(args.state)?.UpdateController(args.state);
+            GetOrAddWindowsMixedRealityController(args.state)?.UpdateController(args.state);
         }
 
         /// <summary>
@@ -164,7 +164,7 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Devices.WindowsMixedReality
         /// <param name="args">SDK source released event arguments</param>
         private void InteractionManager_InteractionSourceReleased(InteractionSourceReleasedEventArgs args)
         {
-            GetOrAddController(args.state)?.UpdateController(args.state);
+            GetOrAddWindowsMixedRealityController(args.state)?.UpdateController(args.state);
         }
 
         /// <summary>
