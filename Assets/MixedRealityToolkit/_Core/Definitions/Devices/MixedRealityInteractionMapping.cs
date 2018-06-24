@@ -257,21 +257,12 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Definitions.Devices
                 Debug.LogError("SetValue(SixDof) is only valid for AxisType.SixDoF InteractionMappings");
             }
 
-            Changed = (sixdofData != null) ? !sixdofData.Equals(newValue) : (newValue != null);
+            Changed = sixdofData != newValue;
 
             sixdofData = newValue;
+            positionData = sixdofData.Position;
+            rotationData = sixdofData.Rotation;
             currentReading = (TReadingType)(object)newValue;
-
-            if (sixdofData != null)
-            {
-                positionData = sixdofData.Position;
-                rotationData = sixdofData.Rotation;
-            }
-            else
-            {
-                positionData = Vector3.zero;
-                rotationData = Quaternion.identity;
-            }
         }
 
         #endregion Unique Set Operators
