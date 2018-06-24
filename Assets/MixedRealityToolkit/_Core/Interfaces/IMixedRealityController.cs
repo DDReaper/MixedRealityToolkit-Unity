@@ -36,15 +36,6 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Interfaces
         /// <summary>
         /// Inform the controller to setup and be ready when asked by it's registered device
         /// </summary>
-        /// <typeparam name="T">Type of setup parameter (unique to certain SDK's)</typeparam>
-        /// <param name="state">The optional input state provided by the SDK/Platform that is required for setup</param>
         void LoadConfiguration();
-
-        ///// <summary>
-        ///// Update the controller with new state information / values
-        ///// </summary>
-        ///// <typeparam name="T">Type of setup parameter (unique to certain SDK's)</typeparam>
-        ///// <param name="state">The optional input state provided by the SDK/Platform that is required for update</param>
-        //void UpdateInputSource<T>(T state);
     }
 }
