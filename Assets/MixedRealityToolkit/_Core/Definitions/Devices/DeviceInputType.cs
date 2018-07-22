@@ -3,7 +3,6 @@
 
 namespace Microsoft.MixedReality.Toolkit.Internal.Definitions.Devices
 {
-    // TODO - Expand input list for additional controller types and have a filter defined by the controller
     /// <summary>
     /// The InputType defines the types of input exposed by a controller.
     /// Denoting the available buttons / interactions that a controller supports.
@@ -29,9 +28,6 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Definitions.Devices
         ButtonPress,
         ButtonTouch,
         ButtonNearTouch,
-        SecondaryButtonPress,
-        SecondaryButtonTouch,
-        SecondaryButtonNearTouch,
         Trigger,
         TriggerTouch,
         TriggerNearTouch,
@@ -64,13 +60,25 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Definitions.Devices
         Start,
         Menu,
         Hand,
-        ThumbPress,
+        Thumb,
         ThumbTouch,
         ThumbNearTouch,
-        Thumb,
+        ThumbPress,
         IndexFinger,
+        IndexFingerTouch,
+        IndexFingerNearTouch,
+        IndexFingerPress,
         MiddleFinger,
+        MiddleFingerTouch,
+        MiddleFingerNearTouch,
+        MiddleFingerPress,
         RingFinger,
-        PinkyFinger
+        RingFingerTouch,
+        RingFingerNearTouch,
+        RingFingerPress,
+        PinkyFinger,
+        PinkyFingerTouch,
+        PinkyFingerNearTouch,
+        PinkyFingerPress,
     }
 }
