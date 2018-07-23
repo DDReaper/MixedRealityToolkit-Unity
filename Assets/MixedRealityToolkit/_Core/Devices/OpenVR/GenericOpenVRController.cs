@@ -278,9 +278,6 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Devices.OpenVR
         /// <param name="interactionMapping"></param>
         protected void UpdateGripData(MixedRealityInteractionMapping interactionMapping)
         {
-            // Get the current grip button press state
-            var gripButtonPress = Input.GetAxis(interactionMapping.AxisCode);
-
             switch (interactionMapping.InputType)
             {
                 case DeviceInputType.Grip:
