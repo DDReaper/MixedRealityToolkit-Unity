@@ -161,6 +161,12 @@ namespace Microsoft.MixedReality.Toolkit.SDK.UX.Cursors
                 return HostTransform.position + HostTransform.TransformVector(CursorPositionOffset);
             }
 
+            if (cursor.Pointer == null)
+            {
+                Debug.LogError($"{cursor.GameObjectReference.name} has no pointer set in it's cursor component!");
+                return Vector3.zero;
+            }
+
             FocusDetails focusDetails;
             if (InputSystem.FocusProvider.TryGetFocusDetails(cursor.Pointer, out focusDetails))
             {
@@ -220,13 +226,13 @@ namespace Microsoft.MixedReality.Toolkit.SDK.UX.Cursors
 
         #endregion IMixedRealityFocusChangedHandler Implementation
 
-        #region Monobehaviour Implementation
+        #region MonoBehaviour Implementation
 
         private void OnValidate()
         {
             Debug.Assert(HostTransform.GetComponent<Collider>() != null, $"A collider component is required on {hostTransform.gameObject.name} for the cursor modifier component on {gameObject.name} to function properly.");
         }
 
-        #endregion Monobehaviour Implementaiton
+        #endregion MonoBehaviour Implementaiton
     }
 }

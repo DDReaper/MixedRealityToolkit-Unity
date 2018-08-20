@@ -3,10 +3,13 @@
 
 using Microsoft.MixedReality.Toolkit.Internal.Definitions;
 using Microsoft.MixedReality.Toolkit.Internal.Devices.OpenVR;
+using Microsoft.MixedReality.Toolkit.Internal.Devices.UnityInput;
 using Microsoft.MixedReality.Toolkit.Internal.Devices.WindowsMixedReality;
 using Microsoft.MixedReality.Toolkit.Internal.Interfaces;
+using Microsoft.MixedReality.Toolkit.Internal.Interfaces.BoundarySystem;
 using Microsoft.MixedReality.Toolkit.Internal.Interfaces.Devices;
 using Microsoft.MixedReality.Toolkit.Internal.Interfaces.InputSystem;
+using Microsoft.MixedReality.Toolkit.Internal.Interfaces.TeleportSystem;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -158,18 +161,29 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Managers
 
             #region  Managers Registration
 
-            //If the Input system has been selected for initialization in the Active profile, enable it in the project
+            // If the Input system has been selected for initialization in the Active profile, enable it in the project
             if (ActiveProfile.IsInputSystemEnabled)
             {
+#if UNITY_EDITOR
+                // Make sure unity axis mappings are set.
+                Utilities.Editor.InputMappingAxisUtility.CheckUnityInputManagerMappings(Definitions.Devices.ControllerMappingLibrary.UnityInputManagerAxes);
+#endif
+
                 //Enable Input (example initializer)
                 AddManager(typeof(IMixedRealityInputSystem), Activator.CreateInstance(ActiveProfile.InputSystemType) as IMixedRealityInputSystem);
             }
 
-            //If the Boundary system has been selected for initialization in the Active profile, enable it in the project
+            // If the Boundary system has been selected for initialization in the Active profile, enable it in the project
             if (ActiveProfile.IsBoundarySystemEnabled)
             {
                 //Enable Boundary (example initializer)
                 AddManager(typeof(IMixedRealityBoundarySystem), Activator.CreateInstance(ActiveProfile.BoundarySystemSystemType) as IMixedRealityBoundarySystem);
+            }
+
+            // If the Teleport system has been selected for initialization in the Active profile, enable it in the project
+            if (ActiveProfile.IsTeleportSystemEnabled)
+            {
+                AddManager(typeof(IMixedRealityTeleportSystem), Activator.CreateInstance(ActiveProfile.TeleportSystemSystemType) as IMixedRealityTeleportSystem);
             }
 
             #region ActiveSDK Discovery
@@ -303,6 +317,8 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Managers
                     DontDestroyOnLoad(instance.transform.root);
                 }
 
+                Application.quitting += ApplicationOnQuitting;
+
 #if UNITY_EDITOR
                 UnityEditor.EditorApplication.playModeStateChanged += playModeState =>
                 {
@@ -317,6 +333,12 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Managers
 
                 Initialize();
             }
+        }
+
+        private void ApplicationOnQuitting()
+        {
+            DisableAllManagers();
+            DestroyAllManagers();
         }
 
         /// <summary>
@@ -792,7 +814,6 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Managers
             }
         }
 
-
         private void DisableAllManagers()
         {
             //If the Mixed Reality Manager is not configured, stop.
@@ -880,7 +901,7 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Managers
 
             if (manager == null)
             {
-                throw new NullReferenceException($"Unable to find {nameof(type)} Manager.");
+                throw new NullReferenceException($"Unable to find {type.Name} Manager.");
             }
         }
 
@@ -919,10 +940,11 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Managers
             {
                 case RuntimePlatform.WindowsPlayer:
                 case RuntimePlatform.WindowsEditor:
-                    AddManager(typeof(IMixedRealityDeviceManager), new OpenVRDeviceManager("OpenVR Device Manager", 10));
-                    break;
                 case RuntimePlatform.OSXPlayer:
                 case RuntimePlatform.OSXEditor:
+                    AddManager(typeof(IMixedRealityDeviceManager), new UnityDeviceManager("Unity Device Manager", 10));
+                    AddManager(typeof(IMixedRealityDeviceManager), new OpenVRDeviceManager("Unity OpenVR Device Manager", 10));
+                    break;
                 case RuntimePlatform.IPhonePlayer:
                     break;
                 case RuntimePlatform.Android:
@@ -933,8 +955,6 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Managers
                 case RuntimePlatform.WSAPlayerX64:
                 case RuntimePlatform.WSAPlayerARM:
                     AddManager(typeof(IMixedRealityDeviceManager), new WindowsMixedRealityDeviceManager("Mixed Reality Device Manager", 10));
-                    break;
-                default:
                     break;
             }
         }
@@ -947,9 +967,10 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Managers
             {
                 case UnityEditor.BuildTarget.StandaloneWindows:
                 case UnityEditor.BuildTarget.StandaloneWindows64:
-                    AddManager(typeof(IMixedRealityDeviceManager), new OpenVRDeviceManager("OpenVR Device Manager", 10));
-                    break;
                 case UnityEditor.BuildTarget.StandaloneOSX:
+                    AddManager(typeof(IMixedRealityDeviceManager), new UnityDeviceManager("Unity Device Manager", 10));
+                    AddManager(typeof(IMixedRealityDeviceManager), new OpenVRDeviceManager("Unity OpenVR Device Manager", 10));
+                    break;
                 case UnityEditor.BuildTarget.iOS:
                     break;
                 case UnityEditor.BuildTarget.Android:
@@ -958,8 +979,6 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Managers
                     break;
                 case UnityEditor.BuildTarget.WSAPlayer:
                     AddManager(typeof(IMixedRealityDeviceManager), new WindowsMixedRealityDeviceManager("Mixed Reality Device Manager", 10));
-                    break;
-                default:
                     break;
             }
         }

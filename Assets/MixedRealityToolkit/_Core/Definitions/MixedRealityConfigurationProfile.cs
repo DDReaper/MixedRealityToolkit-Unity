@@ -2,11 +2,14 @@
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
 using Microsoft.MixedReality.Toolkit.Internal.Attributes;
+using Microsoft.MixedReality.Toolkit.Internal.Definitions.BoundarySystem;
 using Microsoft.MixedReality.Toolkit.Internal.Definitions.Devices;
 using Microsoft.MixedReality.Toolkit.Internal.Definitions.InputSystem;
 using Microsoft.MixedReality.Toolkit.Internal.Definitions.Utilities;
 using Microsoft.MixedReality.Toolkit.Internal.Interfaces;
+using Microsoft.MixedReality.Toolkit.Internal.Interfaces.BoundarySystem;
 using Microsoft.MixedReality.Toolkit.Internal.Interfaces.InputSystem;
+using Microsoft.MixedReality.Toolkit.Internal.Interfaces.TeleportSystem;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -16,7 +19,7 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Definitions
     /// <summary>
     /// Configuration profile settings for the Mixed Reality Toolkit.
     /// </summary>
-    [CreateAssetMenu(menuName = "Mixed Reality Toolkit/Mixed Reality Configuration Profile", fileName = "MixedRealityConfigurationProfile", order = 0)]
+    [CreateAssetMenu(menuName = "Mixed Reality Toolkit/Mixed Reality Configuration Profile", fileName = "MixedRealityConfigurationProfile", order = (int)CreateProfileMenuItemIndices.Configuration)]
     public class MixedRealityConfigurationProfile : ScriptableObject, ISerializationCallbackReceiver
     {
         #region Manager Registry properties
@@ -68,7 +71,8 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Definitions
         private MixedRealityCameraProfile cameraProfile;
 
         /// <summary>
-        /// Input System Action Mapping profile for wiring up Controller input to Actions.
+        /// Profile for customizing your camera and quality settings based on if your 
+        /// head mounted display (HMD) is a transparent device or an occluded device.
         /// </summary>
         public MixedRealityCameraProfile CameraProfile
         {
@@ -87,7 +91,7 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Definitions
         {
             get
             {
-                return inputActionsProfile != null && inputSystemType.Type != null && enableInputSystem;
+                return inputActionsProfile != null && inputSystemType != null && inputSystemType.Type != null && enableInputSystem;
             }
             private set { enableInputSystem = value; }
         }
@@ -117,6 +121,19 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Definitions
         {
             get { return inputActionsProfile; }
             private set { inputActionsProfile = value; }
+        }
+
+        [SerializeField]
+        [Tooltip("Pointer Configuration options")]
+        private MixedRealityPointerProfile pointerProfile;
+
+        /// <summary>
+        /// Pointer configuration options
+        /// </summary>
+        public MixedRealityPointerProfile PointerProfile
+        {
+            get { return pointerProfile; }
+            private set { pointerProfile = value; }
         }
 
         [SerializeField]
@@ -180,7 +197,7 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Definitions
         /// </summary>
         public bool IsBoundarySystemEnabled
         {
-            get { return boundarySystemType.Type != null && enableBoundarySystem; }
+            get { return boundarySystemType != null && boundarySystemType.Type != null && enableBoundarySystem; }
             private set { enableInputSystem = value; }
         }
 
@@ -199,35 +216,68 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Definitions
         }
 
         [SerializeField]
-        [Tooltip("The approximate height of the playspace, in meters.")]
+        [Tooltip("The approximate height of the play space, in meters.")]
         private float boundaryHeight = 3.0f;
 
         /// <summary>
-        /// The approximate height of the playspace, in meters.
+        /// The developer defined height of the boundary, in meters.
         /// </summary>
         /// <remarks>
-        /// The BoundaryHeight property is used to create a three dimensional volume for the playspace.
+        /// The BoundaryHeight property is used to create a three dimensional volume for the play space.
         /// </remarks>
-        public float BoundaryHeight
+        public float BoundaryHeight => boundaryHeight;
+
+        [SerializeField]
+        [Tooltip("Profile for wiring up boundary visualization assets.")]
+        private MixedRealityBoundaryVisualizationProfile boundaryVisualizationProfile;
+
+        /// <summary>
+        /// Active profile for controller mapping configuration
+        /// </summary>
+        public MixedRealityBoundaryVisualizationProfile BoundaryVisualizationProfile
         {
-            get { return boundaryHeight; }
-            set { boundaryHeight = value; }
+            get { return boundaryVisualizationProfile; }
+            private set { boundaryVisualizationProfile = value; }
         }
 
         [SerializeField]
-        [Tooltip("Instruct the platform whether or not to render the playspace boundary. Note: not all platforms support configuring this option.")]
-        private bool enablePlatformBoundaryRendering = true;
+        [Tooltip("Enable the Teleport System on Startup")]
+        private bool enableTeleportSystem = false;
 
         /// <summary>
-        /// Instruct the platform whether or not to render the playspace boundary.
+        /// Enable and configure the boundary system.
         /// </summary>
-        /// <remarks>
-        /// Not all platforms support the EnablePlatformBoundaryRendering property.
-        /// </remarks>
-        public bool IsPlatformBoundaryRenderingEnabled
+        public bool IsTeleportSystemEnabled
         {
-            get { return enablePlatformBoundaryRendering; }
-            set { enablePlatformBoundaryRendering = value; }
+            get { return teleportSystemType != null && teleportSystemType.Type != null && enableTeleportSystem; }
+            private set { enableTeleportSystem = value; }
+        }
+
+        [SerializeField]
+        [Tooltip("Boundary System Class to instantiate at runtime.")]
+        [Implements(typeof(IMixedRealityTeleportSystem), TypeGrouping.ByNamespaceFlat)]
+        private SystemType teleportSystemType;
+
+        /// <summary>
+        /// Boundary System Script File to instantiate at runtime.
+        /// </summary>
+        public SystemType TeleportSystemSystemType
+        {
+            get { return teleportSystemType; }
+            private set { teleportSystemType = value; }
+        }
+
+        [SerializeField]
+        [Tooltip("The duration of the teleport in seconds.")]
+        private float teleportDuration = 0.25f;
+
+        /// <summary>
+        /// The duration of the teleport in seconds.
+        /// </summary>
+        public float TeleportDuration
+        {
+            get { return teleportDuration; }
+            set { teleportDuration = value; }
         }
 
         #endregion Mixed Reality Manager configurable properties

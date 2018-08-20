@@ -7,7 +7,7 @@ using Microsoft.MixedReality.Toolkit.Internal.Definitions.InputSystem;
 using Microsoft.MixedReality.Toolkit.Internal.Definitions.Utilities;
 using Microsoft.MixedReality.Toolkit.Internal.EventDatum.Input;
 using Microsoft.MixedReality.Toolkit.Internal.Extensions;
-using Microsoft.MixedReality.Toolkit.Internal.Interfaces;
+using Microsoft.MixedReality.Toolkit.Internal.Interfaces.Devices;
 using Microsoft.MixedReality.Toolkit.Internal.Interfaces.InputSystem;
 using Microsoft.MixedReality.Toolkit.Internal.Interfaces.InputSystem.Handlers;
 using Microsoft.MixedReality.Toolkit.Internal.Managers;
@@ -20,7 +20,7 @@ using UnityEngine.EventSystems;
 namespace Microsoft.MixedReality.Toolkit.SDK.Input
 {
     /// <summary>
-    /// The Input system controls the orchestration of input events in a scene
+    /// The Mixed Reality Toolkit's specific implementation of the <see cref="IMixedRealityInputSystem"/>
     /// </summary>
     public class MixedRealityInputManager : MixedRealityEventManager, IMixedRealityInputSystem
     {
@@ -91,6 +91,12 @@ namespace Microsoft.MixedReality.Toolkit.SDK.Input
 
         private void InitializeInternal()
         {
+            if (CameraCache.Main.transform.parent == null)
+            {
+                var cameraParent = new GameObject("Body");
+                CameraCache.Main.transform.SetParent(cameraParent.transform);
+            }
+
             focusProvider = CameraCache.Main.gameObject.EnsureComponent<FocusProvider>();
             gazeProvider = CameraCache.Main.gameObject.EnsureComponent<GazeProvider>();
 
@@ -261,14 +267,8 @@ namespace Microsoft.MixedReality.Toolkit.SDK.Input
             Debug.Assert(baseInputEventData.InputSource != null, $"Failed to find an input source for {baseInputEventData}");
             Debug.Assert(!baseInputEventData.used);
 
-            GameObject focusedObject = FocusProvider?.GetFocusedObject(baseInputEventData);
-
             // Send the event to global listeners
-            for (int i = 0; i < EventListeners.Count; i++)
-            {
-                // Global listeners should only get events on themselves, as opposed to their hierarchy.
-                ExecuteEvents.Execute(EventListeners[i], baseInputEventData, eventHandler);
-            }
+            base.HandleEvent(eventData, eventHandler);
 
             if (baseInputEventData.used)
             {
@@ -276,6 +276,8 @@ namespace Microsoft.MixedReality.Toolkit.SDK.Input
                 // the event from going any further.
                 return;
             }
+
+            GameObject focusedObject = FocusProvider?.GetFocusedObject(baseInputEventData);
 
             // Handle modal input if one exists
             if (modalInputStack.Count > 0)
@@ -328,8 +330,7 @@ namespace Microsoft.MixedReality.Toolkit.SDK.Input
         /// <param name="listener">Listener to add.</param>
         public override void Register(GameObject listener)
         {
-            if (EventListeners.Contains(listener)) { return; }
-            EventListeners.Add(listener);
+            base.Register(listener);
         }
 
         /// <summary>
@@ -338,8 +339,7 @@ namespace Microsoft.MixedReality.Toolkit.SDK.Input
         /// <param name="listener"></param>
         public override void Unregister(GameObject listener)
         {
-            if (!EventListeners.Contains(listener)) { return; }
-            EventListeners.Remove(listener);
+            base.Unregister(listener);
         }
 
         #endregion IEventSystemManager Implementation
@@ -496,11 +496,6 @@ namespace Microsoft.MixedReality.Toolkit.SDK.Input
             // Create input event
             sourceStateEventData.Initialize(source, controller);
 
-            AddSource(source);
-        }
-
-        private void AddSource(IMixedRealityInputSource source)
-        {
             Debug.Assert(!DetectedInputSources.Contains(source), $"{source.SourceName} has already been registered with the Input Manager!");
 
             DetectedInputSources.Add(source);
@@ -522,11 +517,6 @@ namespace Microsoft.MixedReality.Toolkit.SDK.Input
             // Create input event
             sourceStateEventData.Initialize(source, controller);
 
-            RemoveSource(source);
-        }
-
-        private void RemoveSource(IMixedRealityInputSource source)
-        {
             Debug.Assert(DetectedInputSources.Contains(source), $"{source.SourceName} was never registered with the Input Manager!");
 
             DetectedInputSources.Remove(source);
@@ -628,7 +618,16 @@ namespace Microsoft.MixedReality.Toolkit.SDK.Input
             // Raise Focus Events on the pointers cursor if it has one.
             if (pointer.BaseCursor != null)
             {
-                ExecuteEvents.ExecuteHierarchy(pointer.BaseCursor.GetGameObjectReference(), focusEventData, OnPreFocusChangedHandler);
+                try
+                {
+                    // When shutting down a game, we can sometime get old references to game objects that have been cleaned up.
+                    // We'll ignore when this happens.
+                    ExecuteEvents.ExecuteHierarchy(pointer.BaseCursor.GameObjectReference, focusEventData, OnPreFocusChangedHandler);
+                }
+                catch (Exception)
+                {
+                    // ignored.
+                }
             }
         }
 
@@ -658,7 +657,16 @@ namespace Microsoft.MixedReality.Toolkit.SDK.Input
             // Raise Focus Events on the pointers cursor if it has one.
             if (pointer.BaseCursor != null)
             {
-                ExecuteEvents.ExecuteHierarchy(pointer.BaseCursor.GetGameObjectReference(), focusEventData, OnFocusChangedHandler);
+                try
+                {
+                    // When shutting down a game, we can sometime get old references to game objects that have been cleaned up.
+                    // We'll ignore when this happens.
+                    ExecuteEvents.ExecuteHierarchy(pointer.BaseCursor.GameObjectReference, focusEventData, OnFocusChangedHandler);
+                }
+                catch (Exception)
+                {
+                    // ignored.
+                }
             }
         }
 
@@ -676,8 +684,8 @@ namespace Microsoft.MixedReality.Toolkit.SDK.Input
 
             ExecuteEvents.ExecuteHierarchy(focusedObject, focusEventData, OnFocusEnterEventHandler);
 
-            var graphicEventData = FocusProvider.GetSpecificPointerGraphicEventData(pointer);
-            if (graphicEventData != null)
+            GraphicInputEventData graphicEventData;
+            if (FocusProvider.TryGetSpecificPointerGraphicEventData(pointer, out graphicEventData))
             {
                 ExecuteEvents.ExecuteHierarchy(focusedObject, graphicEventData, ExecuteEvents.pointerEnterHandler);
             }
@@ -697,8 +705,8 @@ namespace Microsoft.MixedReality.Toolkit.SDK.Input
 
             ExecuteEvents.ExecuteHierarchy(unfocusedObject, focusEventData, OnFocusExitEventHandler);
 
-            var graphicEventData = FocusProvider.GetSpecificPointerGraphicEventData(pointer);
-            if (graphicEventData != null)
+            GraphicInputEventData graphicEventData;
+            if (FocusProvider.TryGetSpecificPointerGraphicEventData(pointer, out graphicEventData))
             {
                 ExecuteEvents.ExecuteHierarchy(unfocusedObject, graphicEventData, ExecuteEvents.pointerExitHandler);
             }
@@ -742,12 +750,13 @@ namespace Microsoft.MixedReality.Toolkit.SDK.Input
             ExecutePointerDown(HandlePointerDown(pointer));
         }
 
-        private GraphicInputEventData HandlePointerDown(IMixedRealityPointer pointingSource)
+        private GraphicInputEventData HandlePointerDown(IMixedRealityPointer pointer)
         {
             // Pass handler through HandleEvent to perform modal/fallback logic
             HandleEvent(pointerEventData, OnPointerDownEventHandler);
-
-            return FocusProvider.GetSpecificPointerGraphicEventData(pointingSource);
+            GraphicInputEventData graphicEventData;
+            FocusProvider.TryGetSpecificPointerGraphicEventData(pointer, out graphicEventData);
+            return graphicEventData;
         }
 
         private static void ExecutePointerDown(GraphicInputEventData graphicInputEventData)
@@ -838,12 +847,14 @@ namespace Microsoft.MixedReality.Toolkit.SDK.Input
             }
         }
 
-        private GraphicInputEventData HandlePointerUp(IMixedRealityPointer pointingSource)
+        private GraphicInputEventData HandlePointerUp(IMixedRealityPointer pointer)
         {
             // Pass handler through HandleEvent to perform modal/fallback logic
             HandleEvent(pointerEventData, OnPointerUpEventHandler);
 
-            return FocusProvider.GetSpecificPointerGraphicEventData(pointingSource);
+            GraphicInputEventData graphicEventData;
+            FocusProvider.TryGetSpecificPointerGraphicEventData(pointer, out graphicEventData);
+            return graphicEventData;
         }
 
         #endregion Pointer Up
@@ -1399,74 +1410,6 @@ namespace Microsoft.MixedReality.Toolkit.SDK.Input
         #endregion Manipulation Events
 
         #endregion Gestures
-
-        #region Teleport Events
-
-        //private static readonly ExecuteEvents.EventFunction<IMixedRealityTeleportHandler> OnTeleportIntentHandler =
-        //        delegate (IMixedRealityTeleportHandler handler, BaseEventData eventData)
-        //        {
-        //            var casted = ExecuteEvents.ValidateEventData<TeleportEventData>(eventData);
-        //            handler.OnTeleportIntent(casted);
-        //        };
-
-        //public void RaiseTeleportIntent(TeleportPointer pointer)
-        //{
-        //    // Create input event
-        //    teleportEventData.Initialize(pointer.InputSourceParent);
-
-        //    // Pass handler through HandleEvent to perform modal/fallback logic
-        //    HandleEvent(teleportEventData, OnTeleportIntentHandler);
-        //}
-
-        //private static readonly ExecuteEvents.EventFunction<IMixedRealityTeleportHandler> OnTeleportStartedHandler =
-        //        delegate (IMixedRealityTeleportHandler handler, BaseEventData eventData)
-        //        {
-        //            var casted = ExecuteEvents.ValidateEventData<TeleportEventData>(eventData);
-        //            handler.OnTeleportStarted(casted);
-        //        };
-
-        //public void RaiseTeleportStarted(TeleportPointer pointer)
-        //{
-        //    // Create input event
-        //    teleportEventData.Initialize(pointer.InputSourceParent);
-
-        //    // Pass handler through HandleEvent to perform modal/fallback logic
-        //    HandleEvent(teleportEventData, OnTeleportStartedHandler);
-        //}
-
-        //private static readonly ExecuteEvents.EventFunction<IMixedRealityTeleportHandler> OnTeleportCompletedHandler =
-        //        delegate (IMixedRealityTeleportHandler handler, BaseEventData eventData)
-        //        {
-        //            var casted = ExecuteEvents.ValidateEventData<TeleportEventData>(eventData);
-        //            handler.OnTeleportCompleted(casted);
-        //        };
-
-        //public void RaiseTeleportCompleted(TeleportPointer pointer)
-        //{
-        //    // Create input event
-        //    teleportEventData.Initialize(pointer.InputSourceParent);
-
-        //    // Pass handler through HandleEvent to perform modal/fallback logic
-        //    HandleEvent(teleportEventData, OnTeleportCompletedHandler);
-        //}
-
-        //private static readonly ExecuteEvents.EventFunction<IMixedRealityTeleportHandler> OnTeleportCanceledHandler =
-        //        delegate (IMixedRealityTeleportHandler handler, BaseEventData eventData)
-        //        {
-        //            var casted = ExecuteEvents.ValidateEventData<TeleportEventData>(eventData);
-        //            handler.OnTeleportCanceled(casted);
-        //        };
-
-        //public void RaiseTeleportCanceled(TeleportPointer pointer)
-        //{
-        //    // Create input event
-        //    teleportEventData.Initialize(pointer.InputSourceParent);
-
-        //    // Pass handler through HandleEvent to perform modal/fallback logic
-        //    HandleEvent(teleportEventData, OnTeleportCanceledHandler);
-        //}
-
-        #endregion Teleport Events
 
 #if UNITY_STANDALONE_WIN || UNITY_WSA || UNITY_EDITOR_WIN
 
