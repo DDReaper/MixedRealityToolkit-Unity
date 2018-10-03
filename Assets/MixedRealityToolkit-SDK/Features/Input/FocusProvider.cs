@@ -1,12 +1,14 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
-using Microsoft.MixedReality.Toolkit.Internal.Definitions.Physics;
-using Microsoft.MixedReality.Toolkit.Internal.EventDatum.Input;
-using Microsoft.MixedReality.Toolkit.Internal.Extensions;
-using Microsoft.MixedReality.Toolkit.Internal.Interfaces.InputSystem;
-using Microsoft.MixedReality.Toolkit.Internal.Utilities;
-using Microsoft.MixedReality.Toolkit.Internal.Utilities.Physics;
+using Microsoft.MixedReality.Toolkit.Core.Definitions.Physics;
+using Microsoft.MixedReality.Toolkit.Core.EventDatum.Input;
+using Microsoft.MixedReality.Toolkit.Core.Extensions;
+using Microsoft.MixedReality.Toolkit.Core.Interfaces.InputSystem;
+using Microsoft.MixedReality.Toolkit.Core.Managers;
+using Microsoft.MixedReality.Toolkit.Core.Utilities;
+using Microsoft.MixedReality.Toolkit.Core.Utilities.Async;
+using Microsoft.MixedReality.Toolkit.Core.Utilities.Physics;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -223,7 +225,7 @@ namespace Microsoft.MixedReality.Toolkit.SDK.Input
 
         #region MonoBehaviour Implementation
 
-        private void Awake()
+        private async void Awake()
         {
             if (uiRaycastCamera == null)
             {
@@ -231,10 +233,19 @@ namespace Microsoft.MixedReality.Toolkit.SDK.Input
                                  "To create a UIRaycastCamera in your scene, find this Focus Provider GameObject and add one there.");
                 CreateUiRaycastCamera();
             }
+
+            await WaitUntilInputSystemValid;
+
+            foreach (var inputSource in MixedRealityManager.InputSystem.DetectedInputSources)
+            {
+                RegisterPointers(inputSource);
+            }
         }
 
         private void Update()
         {
+            if (MixedRealityManager.InputSystem == null) { return; }
+
             UpdatePointers();
             UpdateFocusedObjects();
         }
@@ -432,6 +443,23 @@ namespace Microsoft.MixedReality.Toolkit.SDK.Input
             return true;
         }
 
+        private void RegisterPointers(IMixedRealityInputSource inputSource)
+        {
+            // If our input source does not have any pointers, then skip.
+            if (inputSource.Pointers == null) { return; }
+
+            for (int i = 0; i < inputSource.Pointers.Length; i++)
+            {
+                RegisterPointer(inputSource.Pointers[i]);
+
+                // Special Registration for Gaze
+                if (inputSource.SourceId == MixedRealityManager.InputSystem.GazeProvider.GazeInputSource.SourceId && gazeProviderPointingData == null)
+                {
+                    gazeProviderPointingData = new PointerData(inputSource.Pointers[i]);
+                }
+            }
+        }
+
         /// <inheritdoc />
         public bool UnregisterPointer(IMixedRealityPointer pointer)
         {
@@ -457,10 +485,10 @@ namespace Microsoft.MixedReality.Toolkit.SDK.Input
 
                 if (!objectIsStillFocusedByOtherPointer)
                 {
-                    InputSystem.RaiseFocusExit(pointer, unfocusedObject);
+                    MixedRealityManager.InputSystem.RaiseFocusExit(pointer, unfocusedObject);
                 }
 
-                InputSystem.RaisePreFocusChanged(pointer, unfocusedObject, null);
+                MixedRealityManager.InputSystem.RaisePreFocusChanged(pointer, unfocusedObject, null);
             }
 
             pointers.Remove(pointerData);
@@ -632,7 +660,6 @@ namespace Microsoft.MixedReality.Toolkit.SDK.Input
         /// <param name="prioritizedLayerMasks"></param>
         private void RaycastGraphics(PointerData pointer, LayerMask[] prioritizedLayerMasks)
         {
-            Debug.Assert(pointer.Details.Point != Vector3.zero, "Invalid pointer source start point found to raycast from!");
             Debug.Assert(UIRaycastCamera != null, "You must assign a UIRaycastCamera on the FocusProvider before you can process uGUI raycasting.");
 
             RaycastResult raycastResult = default(RaycastResult);
@@ -790,21 +817,21 @@ namespace Microsoft.MixedReality.Toolkit.SDK.Input
                 GameObject pendingUnfocusObject = change.PreviousPointerTarget;
                 GameObject pendingFocusObject = change.CurrentPointerTarget;
 
-                InputSystem.RaisePreFocusChanged(change.Pointer, pendingUnfocusObject, pendingFocusObject);
+                MixedRealityManager.InputSystem.RaisePreFocusChanged(change.Pointer, pendingUnfocusObject, pendingFocusObject);
 
                 if (pendingOverallFocusExitSet.Contains(pendingUnfocusObject))
                 {
-                    InputSystem.RaiseFocusExit(change.Pointer, pendingUnfocusObject);
+                    MixedRealityManager.InputSystem.RaiseFocusExit(change.Pointer, pendingUnfocusObject);
                     pendingOverallFocusExitSet.Remove(pendingUnfocusObject);
                 }
 
                 if (pendingOverallFocusEnterSet.Contains(pendingFocusObject))
                 {
-                    InputSystem.RaiseFocusEnter(change.Pointer, pendingFocusObject);
+                    MixedRealityManager.InputSystem.RaiseFocusEnter(change.Pointer, pendingFocusObject);
                     pendingOverallFocusEnterSet.Remove(pendingFocusObject);
                 }
 
-                InputSystem.RaiseFocusChanged(change.Pointer, pendingUnfocusObject, pendingFocusObject);
+                MixedRealityManager.InputSystem.RaiseFocusChanged(change.Pointer, pendingUnfocusObject, pendingFocusObject);
             }
 
             Debug.Assert(pendingOverallFocusExitSet.Count == 0);
@@ -816,30 +843,13 @@ namespace Microsoft.MixedReality.Toolkit.SDK.Input
 
         #region ISourceState Implementation
 
+        /// <inheritdoc />
         public void OnSourceDetected(SourceStateEventData eventData)
         {
-            // If our input source does not have any pointers, then skip.
-            if (eventData.InputSource.Pointers == null) { return; }
-
-            for (var i = 0; i < eventData.InputSource.Pointers.Length; i++)
-            {
-                RegisterPointer(eventData.InputSource.Pointers[i]);
-
-                // Special Registration for Gaze
-                if (eventData.InputSource.SourceId == InputSystem.GazeProvider.GazeInputSource.SourceId)
-                {
-                    Debug.Assert(gazeProviderPointingData == null, "Gaze Provider Pointer Data was already registered!");
-
-                    if (gazeProviderPointingData == null)
-                    {
-                        gazeProviderPointingData = new PointerData(eventData.InputSource.Pointers[i]);
-                    }
-
-                    Debug.Assert(gazeProviderPointingData != null);
-                }
-            }
+            RegisterPointers(eventData.InputSource);
         }
 
+        /// <inheritdoc />
         public void OnSourceLost(SourceStateEventData eventData)
         {
             // If the input source does not have pointers, then skip.
@@ -851,7 +861,7 @@ namespace Microsoft.MixedReality.Toolkit.SDK.Input
                 if (gazeProviderPointingData != null && eventData.InputSource.Pointers[i].PointerId == gazeProviderPointingData.Pointer.PointerId)
                 {
                     // If the source lost is the gaze input source, then reset it.
-                    if (eventData.InputSource.SourceId == InputSystem.GazeProvider.GazeInputSource.SourceId)
+                    if (eventData.InputSource.SourceId == MixedRealityManager.InputSystem.GazeProvider.GazeInputSource.SourceId)
                     {
                         gazeProviderPointingData.ResetFocusedObjects();
                         gazeProviderPointingData = null;

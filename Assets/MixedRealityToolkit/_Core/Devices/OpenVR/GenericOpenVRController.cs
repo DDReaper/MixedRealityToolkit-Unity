@@ -1,18 +1,19 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
-using Microsoft.MixedReality.Toolkit.Internal.Definitions.Devices;
-using Microsoft.MixedReality.Toolkit.Internal.Definitions.InputSystem;
-using Microsoft.MixedReality.Toolkit.Internal.Definitions.Utilities;
-using Microsoft.MixedReality.Toolkit.Internal.Devices.UnityInput;
-using Microsoft.MixedReality.Toolkit.Internal.Interfaces.InputSystem;
+using Microsoft.MixedReality.Toolkit.Core.Definitions.Devices;
+using Microsoft.MixedReality.Toolkit.Core.Definitions.InputSystem;
+using Microsoft.MixedReality.Toolkit.Core.Definitions.Utilities;
+using Microsoft.MixedReality.Toolkit.Core.Devices.UnityInput;
+using Microsoft.MixedReality.Toolkit.Core.Interfaces.InputSystem;
+using Microsoft.MixedReality.Toolkit.Core.Managers;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.XR;
 
-namespace Microsoft.MixedReality.Toolkit.Internal.Devices.OpenVR
+namespace Microsoft.MixedReality.Toolkit.Core.Devices.OpenVR
 {
-    public class GenericOpenVRController : GenericUnityController
+    public class GenericOpenVRController : GenericJoystickController
     {
         public GenericOpenVRController(TrackingState trackingState, Handedness controllerHandedness, IMixedRealityInputSource inputSource = null, MixedRealityInteractionMapping[] interactions = null)
             : base(trackingState, controllerHandedness, inputSource, interactions)
@@ -195,22 +196,22 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Devices.OpenVR
             // Raise input system events if it is enabled.
             if (lastState != TrackingState)
             {
-                InputSystem?.RaiseSourceTrackingStateChanged(InputSource, this, TrackingState);
+                MixedRealityManager.InputSystem?.RaiseSourceTrackingStateChanged(InputSource, this, TrackingState);
             }
 
             if (TrackingState == TrackingState.Tracked && LastControllerPose != CurrentControllerPose)
             {
                 if (IsPositionAvailable && IsRotationAvailable)
                 {
-                    InputSystem?.RaiseSourcePoseChanged(InputSource, this, CurrentControllerPose);
+                    MixedRealityManager.InputSystem?.RaiseSourcePoseChanged(InputSource, this, CurrentControllerPose);
                 }
                 else if (IsPositionAvailable && !IsRotationAvailable)
                 {
-                    InputSystem?.RaiseSourcePositionChanged(InputSource, this, CurrentControllerPosition);
+                    MixedRealityManager.InputSystem?.RaiseSourcePositionChanged(InputSource, this, CurrentControllerPosition);
                 }
                 else if (!IsPositionAvailable && IsRotationAvailable)
                 {
-                    InputSystem?.RaiseSourceRotationChanged(InputSource, this, CurrentControllerRotation);
+                    MixedRealityManager.InputSystem?.RaiseSourceRotationChanged(InputSource, this, CurrentControllerRotation);
                 }
             }
         }

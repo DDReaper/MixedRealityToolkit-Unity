@@ -1,14 +1,14 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
-using Microsoft.MixedReality.Toolkit.Internal.Definitions.InputSystem;
-using Microsoft.MixedReality.Toolkit.Internal.Extensions;
-using Microsoft.MixedReality.Toolkit.Internal.Managers;
+using Microsoft.MixedReality.Toolkit.Core.Definitions.InputSystem;
+using Microsoft.MixedReality.Toolkit.Core.Extensions;
+using Microsoft.MixedReality.Toolkit.Core.Managers;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
-namespace Microsoft.MixedReality.Toolkit.Internal.Inspectors.PropertyDrawers
+namespace Microsoft.MixedReality.Toolkit.Core.Inspectors.PropertyDrawers
 {
     [CustomPropertyDrawer(typeof(MixedRealityInputAction))]
     public class InputActionPropertyDrawer : PropertyDrawer
@@ -29,9 +29,9 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Inspectors.PropertyDrawers
             if (profile == null ||
                 (MixedRealityManager.Instance.ActiveProfile.IsInputSystemEnabled &&
                  profile.InputActions != null &&
-                 profile.InputActions != MixedRealityManager.Instance.ActiveProfile.InputActionsProfile.InputActions))
+                 profile.InputActions != MixedRealityManager.Instance.ActiveProfile.InputSystemProfile.InputActionsProfile.InputActions))
             {
-                profile = MixedRealityManager.Instance.ActiveProfile.InputActionsProfile;
+                profile = MixedRealityManager.Instance.ActiveProfile.InputSystemProfile.InputActionsProfile;
 
                 if (profile != null)
                 {

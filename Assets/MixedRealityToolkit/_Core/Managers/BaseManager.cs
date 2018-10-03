@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
-namespace Microsoft.MixedReality.Toolkit.Internal.Managers
+namespace Microsoft.MixedReality.Toolkit.Core.Managers
 {
     /// <summary>
     /// The base manager implements the IMixedRealityManager interface and provides default properties for all managers
@@ -16,7 +16,7 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Managers
         /// <summary>
         /// Optional Priority to reorder registered managers based on their respective priority, reduces the risk of race conditions by prioritizing the order in which managers are evaluated.
         /// </summary>
-        public virtual uint Priority { get; set; }
+        public virtual uint Priority { get; set; } = 5;
 
         /// <summary>
         /// The initialize function is used to setup the manager once created.

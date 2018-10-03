@@ -2,12 +2,12 @@
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
 #if WINDOWS_UWP && !ENABLE_IL2CPP
-using Microsoft.MixedReality.Toolkit.Internal.Extensions;
+using Microsoft.MixedReality.Toolkit.Core.Extensions;
 #endif // WINDOWS_UWP && !ENABLE_IL2CPP
 using System;
 using UnityEngine;
 
-namespace Microsoft.MixedReality.Toolkit.Internal.Definitions.Utilities
+namespace Microsoft.MixedReality.Toolkit.Core.Definitions.Utilities
 {
     /// <summary>
     /// Reference to a class <see cref="System.Type"/> with support for Unity serialization.
@@ -124,15 +124,7 @@ namespace Microsoft.MixedReality.Toolkit.Internal.Definitions.Utilities
 
         public override string ToString()
         {
-            if (Type.FullName != null)
-            {
-                if (Type != null)
-                {
-                    return Type.FullName;
-                }
-            }
-
-            return "(None)";
+            return Type?.FullName ?? "(None)";
         }
     }
 }

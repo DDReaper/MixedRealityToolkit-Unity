@@ -1,12 +1,13 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
-using Microsoft.MixedReality.Toolkit.Internal.Definitions.InputSystem;
-using Microsoft.MixedReality.Toolkit.Internal.Definitions.Physics;
-using Microsoft.MixedReality.Toolkit.Internal.EventDatum.Teleport;
-using Microsoft.MixedReality.Toolkit.Internal.Interfaces.InputSystem;
-using Microsoft.MixedReality.Toolkit.Internal.Interfaces.TeleportSystem;
-using Microsoft.MixedReality.Toolkit.Internal.Utilities;
+using Microsoft.MixedReality.Toolkit.Core.Definitions.InputSystem;
+using Microsoft.MixedReality.Toolkit.Core.Definitions.Physics;
+using Microsoft.MixedReality.Toolkit.Core.EventDatum.Teleport;
+using Microsoft.MixedReality.Toolkit.Core.Interfaces.InputSystem;
+using Microsoft.MixedReality.Toolkit.Core.Interfaces.TeleportSystem;
+using Microsoft.MixedReality.Toolkit.Core.Managers;
+using Microsoft.MixedReality.Toolkit.Core.Utilities;
 using Microsoft.MixedReality.Toolkit.SDK.UX.Pointers;
 using System;
 using UnityEngine;
@@ -83,16 +84,18 @@ namespace Microsoft.MixedReality.Toolkit.SDK.UX.Cursors
             if (Pointer == null)
             {
                 Debug.LogError($"[TeleportCursor.{name}] No Pointer has been assigned!");
+                SetVisibility(false);
                 return;
             }
 
             FocusDetails focusDetails;
 
-            if (!InputSystem.FocusProvider.TryGetFocusDetails(Pointer, out focusDetails))
+            if (!MixedRealityManager.InputSystem.FocusProvider.TryGetFocusDetails(Pointer, out focusDetails))
             {
-                Debug.LogError(InputSystem.FocusProvider.IsPointerRegistered(Pointer)
+                Debug.LogError(MixedRealityManager.InputSystem.FocusProvider.IsPointerRegistered(Pointer)
                     ? $"{gameObject.name}: Unable to get focus details for {pointer.GetType().Name}!"
                     : $"{pointer.GetType().Name} has not been registered!");
+                SetVisibility(false);
                 return;
             }
 
