@@ -34,6 +34,9 @@ namespace Microsoft.MixedReality.Toolkit.SDK.Input
         public HashSet<IMixedRealityInputSource> DetectedInputSources { get; } = new HashSet<IMixedRealityInputSource>();
 
         /// <inheritdoc />
+        public HashSet<IMixedRealityController> DetectedControllers { get; } = new HashSet<IMixedRealityController>();
+
+        /// <inheritdoc />
         public IMixedRealityFocusProvider FocusProvider => focusProvider;
         private FocusProvider focusProvider;
 
@@ -91,12 +94,6 @@ namespace Microsoft.MixedReality.Toolkit.SDK.Input
 
         private void InitializeInternal()
         {
-            if (CameraCache.Main.transform.parent == null)
-            {
-                var cameraParent = new GameObject("Body");
-                CameraCache.Main.transform.SetParent(cameraParent.transform);
-            }
-
             focusProvider = CameraCache.Main.gameObject.EnsureComponent<FocusProvider>();
             gazeProvider = CameraCache.Main.gameObject.EnsureComponent<GazeProvider>();
 
@@ -501,6 +498,11 @@ namespace Microsoft.MixedReality.Toolkit.SDK.Input
 
             DetectedInputSources.Add(source);
 
+            if (controller != null)
+            {
+                DetectedControllers.Add(controller);
+            }
+
             // Pass handler through HandleEvent to perform modal/fallback logic
             HandleEvent(sourceStateEventData, OnSourceDetectedEventHandler);
         }
@@ -521,6 +523,11 @@ namespace Microsoft.MixedReality.Toolkit.SDK.Input
             Debug.Assert(DetectedInputSources.Contains(source), $"{source.SourceName} was never registered with the Input Manager!");
 
             DetectedInputSources.Remove(source);
+
+            if (controller != null)
+            {
+                DetectedControllers.Remove(controller);
+            }
 
             // Pass handler through HandleEvent to perform modal/fallback logic
             HandleEvent(sourceStateEventData, OnSourceLostEventHandler);
@@ -765,7 +772,7 @@ namespace Microsoft.MixedReality.Toolkit.SDK.Input
         public void RaisePointerDown(IMixedRealityPointer pointer, MixedRealityInputAction inputAction)
         {
             // Create input event
-            pointerEventData.Initialize(pointer.InputSourceParent, inputAction);
+            pointerEventData.Initialize(pointer, inputAction);
 
             ExecutePointerDown(HandlePointerDown(pointer));
         }
@@ -774,7 +781,7 @@ namespace Microsoft.MixedReality.Toolkit.SDK.Input
         public void RaisePointerDown(IMixedRealityPointer pointer, Handedness handedness, MixedRealityInputAction inputAction)
         {
             // Create input event
-            pointerEventData.Initialize(pointer.InputSourceParent, handedness, inputAction);
+            pointerEventData.Initialize(pointer, handedness, inputAction);
 
             ExecutePointerDown(HandlePointerDown(pointer));
         }
@@ -848,7 +855,7 @@ namespace Microsoft.MixedReality.Toolkit.SDK.Input
         public void RaisePointerUp(IMixedRealityPointer pointer, MixedRealityInputAction inputAction)
         {
             // Create input event
-            pointerEventData.Initialize(pointer.InputSourceParent, inputAction);
+            pointerEventData.Initialize(pointer, inputAction);
 
             ExecutePointerUp(HandlePointerUp(pointer));
         }
@@ -857,7 +864,7 @@ namespace Microsoft.MixedReality.Toolkit.SDK.Input
         public void RaisePointerUp(IMixedRealityPointer pointer, Handedness handedness, MixedRealityInputAction inputAction)
         {
             // Create input event
-            pointerEventData.Initialize(pointer.InputSourceParent, handedness, inputAction);
+            pointerEventData.Initialize(pointer, handedness, inputAction);
 
             ExecutePointerUp(HandlePointerUp(pointer));
         }
