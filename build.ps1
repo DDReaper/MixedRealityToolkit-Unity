@@ -24,7 +24,8 @@ param(
     [ValidatePattern("^\d+\.\d+\.\d+[fpb]\d+$")]
     [string]$UnityVersion, 
     [switch]$Clean,
-    [switch]$Verbose
+    [switch]$Verbose,
+    [switch]$NoNuget
 )
 
 Import-Module UnitySetup -MinimumVersion '4.0.97' -ErrorAction Stop
@@ -89,7 +90,7 @@ $nugetJobs = Get-ChildItem *.nuspec -Recurse | Foreach-Object {
     Write-Verbose "Starting nuget job for $($_.FullName)"
     Start-Job { 
         param($name, $outDir, $props) 
-        nuget pack $name -OutputDirectory $outDir -Properties $props 
+        nuget pack $name -OutputDirectory $outDir -Properties $props -Exclude *.nuspec.meta
     } -ArgumentList $_.FullName, $OutputDirectory, "version=$Version;releaseNotes=$releaseNotes"
 }
 
@@ -129,5 +130,8 @@ $unityPackages | Foreach-Object {
     catch { Write-Error $_ }
 }
 
-# Wait for, receive, and remove all the nuget jobs
-$nugetJobs | Receive-Job -Wait -AutoRemoveJob
+if (!$NoNuget)
+{
+    # Wait for, receive, and remove all the nuget jobs
+    $nugetJobs | Receive-Job -Wait -AutoRemoveJob
+}
